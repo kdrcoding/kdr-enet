@@ -344,7 +344,7 @@ public partial class MainWindow : Window
     {
         if (!_vm.CanCopy)
             return;
-        var text = _vm.IsCarSide ? _vm.SessionCode : "tcp://127.0.0.1:6801";
+        var text = _vm.IsCarSide ? SessionLink.Digits(_vm.SessionCode) : "tcp://127.0.0.1:6801";
         Clipboard.SetText(text);
         _vm.AddLog("Copied " + text + ".");
     }
@@ -533,8 +533,8 @@ public partial class MainWindow : Window
 
             Mark(_vm.RelayReady ? "All good" : "Missing",
                 _vm.RelayReady
-                    ? "In E-Sys use tcp://127.0.0.1:6801. Then click Join."
-                    : "The session server is not set. In E-Sys the line is still tcp://127.0.0.1:6801.");
+                    ? "Click Join first. Then in E-Sys use tcp://127.0.0.1:6801."
+                    : "The session server is not set, so Join stays off. In E-Sys the line will be tcp://127.0.0.1:6801.");
             return;
         }
 

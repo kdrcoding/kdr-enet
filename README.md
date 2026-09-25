@@ -33,7 +33,7 @@ Cables for the session: **ENET**, **MHD**, **ICOM**.
 
 1. Open KDR ENET → **E-Sys laptop**
 2. Type the code in the **6 boxes** → **Join**
-3. In E-Sys, where you used to put the other laptop, put `tcp://127.0.0.1:6801`
+3. After Join, in E-Sys put `tcp://127.0.0.1:6801`
 4. Leave this window open
 
 **Stop** on both laptops when the coding is done.
