@@ -311,7 +311,7 @@ public partial class MainWindow : Window
             _vm.SessionOn = true;
             _vm.Session.Detail = "Joined";
             _vm.Session.State = "ok";
-            _vm.AddLog("In E-Sys use 127.0.0.1. Leave this window open.");
+            _vm.AddLog("In E-Sys use tcp://127.0.0.1:6801. Leave this window open.");
         }
         catch (Exception ex)
         {
@@ -344,7 +344,7 @@ public partial class MainWindow : Window
     {
         if (!_vm.CanCopy)
             return;
-        var text = _vm.IsCarSide ? _vm.SessionCode : "127.0.0.1";
+        var text = _vm.IsCarSide ? _vm.SessionCode : "tcp://127.0.0.1:6801";
         Clipboard.SetText(text);
         _vm.AddLog("Copied " + text + ".");
     }
@@ -519,7 +519,7 @@ public partial class MainWindow : Window
         {
             Mark("All good", _vm.IsCarSide
                 ? "Read the code to the other laptop. Leave this window open."
-                : "E-Sys address is 127.0.0.1. Leave this window open.");
+                : "In E-Sys use tcp://127.0.0.1:6801. Leave this window open.");
             return;
         }
 
@@ -532,7 +532,9 @@ public partial class MainWindow : Window
             }
 
             Mark(_vm.RelayReady ? "All good" : "Missing",
-                _vm.RelayReady ? "" : "The session server is not set, so Join cannot reach the car laptop.");
+                _vm.RelayReady
+                    ? "In E-Sys use tcp://127.0.0.1:6801. Then click Join."
+                    : "The session server is not set. In E-Sys the line is still tcp://127.0.0.1:6801.");
             return;
         }
 

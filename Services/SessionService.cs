@@ -256,7 +256,7 @@ public sealed class SessionService
                 else
                 {
                     link.StartTechnician(digits, host, port);
-                    Report(progress, "Joined " + SessionLink.FormatCode(digits) + ". In E-Sys use 127.0.0.1.");
+                    Report(progress, "Joined " + SessionLink.FormatCode(digits) + ". In E-Sys use tcp://127.0.0.1:6801.");
                 }
 
                 _link = link;
