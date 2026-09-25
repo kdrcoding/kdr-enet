@@ -1,8 +1,14 @@
 # KDR ENET
 
-Remote **BMW** coding with a session code.
+Free Windows app for a remote BMW coding session. The laptop on the car shows a 6-digit code. The laptop running E-Sys types it. E-Sys uses `127.0.0.1`. The two laptops do not need the same Wi-Fi.
 
-The laptop on the car and the laptop running E-Sys do not need the same Wi-Fi. The car side shows a 6-digit code. The E-Sys side types it. E-Sys uses `127.0.0.1`.
+Windows 10 or 11, 64-bit. Click **Yes** when Windows asks. .NET is already inside the download.
+
+Cables for the session: **ENET**, **MHD**, **ICOM**. K+DCAN only shows that the USB cable is in. The check at the bottom says **Missing**, **Wrong**, or **All good**.
+
+Both copies call the KDR session server. That server is not live yet, so a code cannot reach a laptop in another place until it is.
+
+Not affiliated with BMW. Created by Kadir · [kdrcoding.com](https://kdrcoding.com)
 
 **[Download KdrEnet.exe](https://github.com/kdrcoding/kdr-enet/releases/latest)** · Windows 10 or 11, 64-bit · click **Yes**
 
