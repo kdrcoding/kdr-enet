@@ -8,22 +8,15 @@ public partial class SettingsWindow : Window
 {
     private CableKind _cable;
     private VehicleKind _vehicle;
-    private static readonly SolidColorBrush SelectedFill = Freeze(Color.FromRgb(0x00, 0x96, 0xD6));
-    private static readonly SolidColorBrush SelectedText = Freeze(Colors.White);
-    private static readonly SolidColorBrush IdleFill = Freeze(Color.FromRgb(0x10, 0x15, 0x1F));
-    private static readonly SolidColorBrush IdleText = Freeze(Color.FromRgb(0xF4, 0xF7, 0xFB));
+    private static readonly SolidColorBrush Mark = Freeze(Color.FromRgb(0x1C, 0x69, 0xD4));
+    private static readonly SolidColorBrush OnText = Freeze(Color.FromRgb(0xF4, 0xF7, 0xFB));
+    private static readonly SolidColorBrush OffText = Freeze(Color.FromRgb(0x8E, 0xA0, 0xB5));
 
     public SettingsWindow()
     {
         InitializeComponent();
         _cable = AppSettings.Cable;
         _vehicle = AppSettings.Vehicle;
-        StyleChoice(EnetButton);
-        StyleChoice(KdcanButton);
-        StyleChoice(IcomButton);
-        StyleChoice(MhdButton);
-        StyleChoice(CarButton);
-        StyleChoice(BikeButton);
         Paint();
     }
 
@@ -72,20 +65,11 @@ public partial class SettingsWindow : Window
         PaintOne(BikeButton, _vehicle == VehicleKind.Bike);
     }
 
-    private static void StyleChoice(Button button)
-    {
-        button.Height = 44;
-        button.FontSize = 15;
-        button.FontWeight = FontWeights.SemiBold;
-        button.Cursor = System.Windows.Input.Cursors.Hand;
-        button.BorderThickness = new Thickness(1);
-        button.BorderBrush = new SolidColorBrush(Color.FromRgb(0x24, 0x30, 0x44));
-    }
-
     private static void PaintOne(Button button, bool selected)
     {
-        button.Background = selected ? SelectedFill : IdleFill;
-        button.Foreground = selected ? SelectedText : IdleText;
+        button.Foreground = selected ? OnText : OffText;
+        button.BorderBrush = Mark;
+        button.BorderThickness = new Thickness(0, 0, 0, selected ? 2 : 0);
     }
 
     private static SolidColorBrush Freeze(Color color)
