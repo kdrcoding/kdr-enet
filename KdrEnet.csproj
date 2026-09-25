@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\kdr-enet.ico</ApplicationIcon>
+    <AssemblyName>KdrEnet</AssemblyName>
+    <RootNamespace>KdrEnet</RootNamespace>
+    <Version>1.11.0</Version>
+    <AssemblyVersion>1.11.0.0</AssemblyVersion>
+    <FileVersion>1.11.0.0</FileVersion>
+    <InformationalVersion>1.11.0</InformationalVersion>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <DebuggerSupport>false</DebuggerSupport>
+    <EventSourceSupport>false</EventSourceSupport>
+    <Company>KDR Coding</Company>
+    <Product>KDR ENET</Product>
+    <AssemblyTitle>ENET session link for KDR Coding</AssemblyTitle>
+    <Description>ENET session link for KDR Coding remote sessions</Description>
+    <Copyright>Copyright (c) KDR Coding</Copyright>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="server\**\*.cs" />
+    <Compile Remove="dist\**\*" />
+    <Page Remove="server\**\*" />
+    <None Remove="server\**\*" />
+  </ItemGroup>
+</Project>
