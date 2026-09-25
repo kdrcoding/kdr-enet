@@ -207,8 +207,8 @@
                     <TextBox x:Name="Digit5" Style="{StaticResource DigitBox}" Margin="0"/>
                 </StackPanel>
                 <TextBlock Margin="0,18,0,0" FontSize="14">
-                    <Run Text="E-Sys address" Foreground="#8ea0b5"/>
-                    <Run Text="   127.0.0.1" Foreground="#f4f7fb" FontSize="18" FontWeight="SemiBold"/>
+                    <Run Text="In E-Sys" Foreground="#8ea0b5"/>
+                    <Run Text="   tcp://127.0.0.1:6801" Foreground="#f4f7fb" FontSize="16" FontWeight="SemiBold"/>
                 </TextBlock>
             </StackPanel>
         </StackPanel>

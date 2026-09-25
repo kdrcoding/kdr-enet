@@ -1,6 +1,6 @@
 # KDR ENET
 
-Free Windows app for a remote BMW coding session. The laptop on the car shows a 6-digit code. The laptop running E-Sys types it. E-Sys uses `127.0.0.1`. The two laptops do not need the same Wi-Fi.
+Free Windows app for a remote BMW coding session. The laptop on the car shows a 6-digit code. The laptop running E-Sys types it. In E-Sys use `tcp://127.0.0.1:6801`. The two laptops do not need the same Wi-Fi.
 
 Windows 10 or 11, 64-bit. Click **Yes** when Windows asks. .NET is already inside the download.
 
@@ -33,7 +33,7 @@ Cables for the session: **ENET**, **MHD**, **ICOM**.
 
 1. Open KDR ENET → **E-Sys laptop**
 2. Type the code in the **6 boxes** → **Join**
-3. In E-Sys set the address to `127.0.0.1`
+3. In E-Sys, where you used to put the other laptop, put `tcp://127.0.0.1:6801`
 4. Leave this window open
 
 **Stop** on both laptops when the coding is done.
