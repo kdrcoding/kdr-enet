@@ -63,9 +63,9 @@ public partial class MainWindow : Window
         {
             if (await _session.HasLeftoverSessionAsync())
             {
-                _vm.SessionOn = true;
                 _vm.Session.Detail = "Firewall still off";
                 _vm.Session.State = "warn";
+                _vm.SessionOn = true;
                 _vm.AddLog("Windows Firewall is still off from the last session. Click Stop to turn the previous settings back on.", alert: true);
             }
         }
@@ -332,7 +332,7 @@ public partial class MainWindow : Window
     private void ExplainFailure(Exception ex)
     {
         var missingServer = ex.Message.Contains("session server", StringComparison.OrdinalIgnoreCase);
-        _vm.AddLog(ex.Message, alert: true);
+        _vm.AddLog(missingServer ? "The session server is not set." : ex.Message, alert: true);
         if (!missingServer)
             return;
         _vm.NextDetail = _vm.IsCarSide

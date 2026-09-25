@@ -112,7 +112,8 @@ internal static class DriverCheck
         var ftdi = text.Contains("VID_0403", StringComparison.Ordinal) || text.Contains("FTDI", StringComparison.Ordinal);
         var ch340 = text.Contains("VID_1A86", StringComparison.Ordinal) || text.Contains("CH340", StringComparison.Ordinal) || text.Contains("CH341", StringComparison.Ordinal);
         var asix = text.Contains("VID_0B95", StringComparison.Ordinal) || text.Contains("ASIX", StringComparison.Ordinal) || text.Contains("AX88772", StringComparison.Ordinal);
-        var realtek = text.Contains("VID_0BDA", StringComparison.Ordinal);
+        var realtek = text.Contains("VID_0BDA", StringComparison.Ordinal)
+            && (text.Contains("ETHERNET", StringComparison.Ordinal) || text.Contains("ENET", StringComparison.Ordinal) || text.Contains("RTL815", StringComparison.Ordinal));
         var icom = text.Contains("ICOM", StringComparison.Ordinal);
 
         if (cable == CableKind.Kdcan && ftdi)
