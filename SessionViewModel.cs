@@ -134,6 +134,14 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         set => Set(ref _nextDetail, value);
     }
 
+    private string _checkWord = "Missing";
+
+    public string CheckWord
+    {
+        get => _checkWord;
+        set => Set(ref _checkWord, value);
+    }
+
     public string StatusLine
     {
         get => _statusLine;
