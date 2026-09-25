@@ -230,7 +230,7 @@ public sealed class SessionViewModel : INotifyPropertyChanged
 
     public bool ShowCopy => !IsCarSide || SessionLink.Digits(SessionCode).Length == 6;
 
-    public bool CanStart => !IsBusy && !SessionOn && IsCarSide && RelayReady && !string.IsNullOrEmpty(VehicleIp);
+    public bool CanStart => !IsBusy && !SessionOn && IsCarSide && !string.IsNullOrEmpty(VehicleIp);
 
     public bool CanJoin => !IsBusy && !SessionOn && IsTechSide && RelayReady && SessionLink.Digits(CodeInput).Length == 6;
 

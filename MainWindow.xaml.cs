@@ -35,7 +35,7 @@ public partial class MainWindow : Window
         {
             if (args.PropertyName is nameof(SessionViewModel.IsCarSide) or nameof(SessionViewModel.CanSwitch))
                 PaintRoles();
-            if (args.PropertyName is nameof(SessionViewModel.CodeInput) or nameof(SessionViewModel.SessionOn) or nameof(SessionViewModel.RelayReady))
+            if (args.PropertyName is nameof(SessionViewModel.CodeInput) or nameof(SessionViewModel.SessionCode) or nameof(SessionViewModel.SessionOn) or nameof(SessionViewModel.RelayReady))
                 SetNextStep(_lastScan);
         };
     }
@@ -124,6 +124,14 @@ public partial class MainWindow : Window
         try
         {
             var code = SessionLink.NewCode();
+            if (!_vm.RelayReady)
+            {
+                _vm.LastLineAlert = false;
+                _vm.SessionCode = SessionLink.FormatCode(code);
+                _vm.AddLog("Code " + SessionLink.Digits(code) + " is on this laptop. The other laptop cannot join until the session server is set.");
+                return;
+            }
+
             var progress = new Progress<string>(message => _vm.AddLog(message));
             await _session.StartLinkAsync(code, _vm.VehicleIp, carSide: true, progress);
             _vm.LastLineAlert = false;
@@ -565,7 +573,14 @@ public partial class MainWindow : Window
             return;
         }
 
-        Mark(_vm.RelayReady ? "All good" : "Missing",
-            _vm.RelayReady ? "" : "The module is awake. The session server is not set, so the code stays on this laptop.");
+        if (!_vm.RelayReady)
+        {
+            Mark("Missing", SessionLink.Digits(_vm.SessionCode).Length == 6
+                ? "The code is on this screen. The other laptop cannot join until the session server is set."
+                : "The module is awake. Click Get code.");
+            return;
+        }
+
+        Mark("All good", "");
     }
 }
