@@ -225,31 +225,16 @@
         </StackPanel>
 
         <StackPanel Grid.Row="5">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Check" FontSize="13" Foreground="#8ea0b5" Margin="0,0,10,0"/>
-                <TextBlock Text="{Binding CheckWord}" FontSize="13" FontWeight="SemiBold">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Foreground" Value="#f4f7fb"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding CheckWord}" Value="Missing">
-                                    <Setter Property="Foreground" Value="#8ea0b5"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding CheckWord}" Value="Wrong">
-                                    <Setter Property="Foreground" Value="#e8b15a"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
-            </StackPanel>
-            <TextBlock Text="{Binding NextDetail}" FontSize="13" Foreground="#b7c3d1" TextWrapping="Wrap" Margin="0,4,0,0">
+            <TextBlock Text="{Binding CheckWord}" FontSize="13" TextWrapping="Wrap">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
-                        <Setter Property="Visibility" Value="Visible"/>
+                        <Setter Property="Foreground" Value="#b7c3d1"/>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding NextDetail}" Value="">
-                                <Setter Property="Visibility" Value="Collapsed"/>
+                            <DataTrigger Binding="{Binding CheckTone}" Value="good">
+                                <Setter Property="Foreground" Value="#f4f7fb"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding CheckTone}" Value="wrong">
+                                <Setter Property="Foreground" Value="#e8b15a"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
