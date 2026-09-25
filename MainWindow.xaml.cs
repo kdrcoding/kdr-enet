@@ -542,10 +542,11 @@ public partial class MainWindow : Window
         Process.Start(new ProcessStartInfo(_vm.DriverUrl) { UseShellExecute = true });
     }
 
-    private void Mark(string word, string detail)
+    private void Mark(string tone, string sentence)
     {
-        _vm.CheckWord = word;
-        _vm.NextDetail = detail;
+        _vm.CheckTone = tone;
+        _vm.CheckWord = sentence;
+        _vm.NextDetail = sentence;
     }
 
     private void SetNextStep(ScanResult? result)
@@ -553,15 +554,15 @@ public partial class MainWindow : Window
         _vm.ShowDriver = false;
         if (_vm.SessionOn && _vm.Session.State == "warn")
         {
-            Mark("Wrong", "The firewall is still off from the last session. Click Stop to put the old settings back.");
+            Mark("wrong", "Wrong: the firewall is still off from the last session. Click Stop.");
             return;
         }
 
         if (_vm.SessionOn)
         {
-            Mark("All good", _vm.IsCarSide
-                ? "Read the code to the other laptop. Leave this window open."
-                : "In E-Sys use tcp://127.0.0.1:6801. Leave this window open.");
+            Mark("good", _vm.IsCarSide
+                ? "All good. Read the code above to the other laptop. Leave this window open."
+                : "All good. In E-Sys use tcp://127.0.0.1:6801. Leave this window open.");
             return;
         }
 
@@ -569,20 +570,20 @@ public partial class MainWindow : Window
         {
             if (SessionLink.Digits(_vm.CodeInput).Length != 6)
             {
-                Mark("Missing", "Type the 6-digit code from the car laptop.");
+                Mark("missing", "The 6-digit code is missing. Type it in the boxes above. It comes from the car laptop.");
                 return;
             }
 
-            Mark(_vm.RelayReady ? "All good" : "Missing",
+            Mark(_vm.RelayReady ? "good" : "missing",
                 _vm.RelayReady
-                    ? "Click Join first. Then in E-Sys use tcp://127.0.0.1:6801."
-                    : "The session server is not set, so Join stays off. In E-Sys the line will be tcp://127.0.0.1:6801.");
+                    ? "All good. Click Join, then in E-Sys use tcp://127.0.0.1:6801."
+                    : "The session server is missing, so Join stays off. In E-Sys the line will be tcp://127.0.0.1:6801.");
             return;
         }
 
         if (AppSettings.Cable == CableKind.Kdcan && result is { CableState: "ok" })
         {
-            Mark("Wrong", "K+DCAN is in. The code session is for ENET, MHD, and ICOM.");
+            Mark("wrong", "Wrong: K+DCAN is plugged in. The code session is for ENET, MHD, and ICOM.");
             return;
         }
 
@@ -592,31 +593,31 @@ public partial class MainWindow : Window
             {
                 _vm.DriverUrl = result.DriverUrl;
                 _vm.ShowDriver = result.DriverUrl.Length > 0;
-                Mark("Wrong", result.DriverMessage);
+                Mark("wrong", "Wrong: " + result.DriverMessage);
             }
             else
             {
-                Mark("Missing", AppSettings.PlugSentence);
+                Mark("missing", "The cable is missing. " + AppSettings.PlugSentence);
             }
             return;
         }
 
         if (string.IsNullOrEmpty(_vm.VehicleIp))
         {
-            Mark("Missing", "Turn the ignition on. If it stays quiet, the battery may be too low.");
+            Mark("missing", "The car is quiet. Turn the ignition on. If it stays quiet, the battery may be too low.");
             return;
         }
 
         if (!_vm.RelayReady)
         {
-            Mark("All good", SessionLink.Digits(_vm.SessionCode).Length == 6
-                ? "Read this code out. The other laptop cannot join until the session server is set."
-                : "Click Get code.");
+            Mark("good", SessionLink.Digits(_vm.SessionCode).Length == 6
+                ? "All good. Read the code above out loud. The other laptop cannot join until the session server is set."
+                : "All good. The car is awake. Click Get code.");
             return;
         }
 
-        Mark("All good", SessionLink.Digits(_vm.SessionCode).Length == 6
-            ? "Read this code to the other laptop."
-            : "Click Get code, then read it to the other laptop.");
+        Mark("good", SessionLink.Digits(_vm.SessionCode).Length == 6
+            ? "All good. Read the code above to the other laptop."
+            : "All good. Click Get code, then read it to the other laptop.");
     }
 }

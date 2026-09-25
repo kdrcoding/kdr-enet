@@ -59,7 +59,7 @@ Windows 10 and 11 usually already have the cable driver. If the cable is plugged
 
 The E-Sys laptop does not need a cable driver.
 
-The bottom of the window is a short check: **Missing**, **Wrong**, or **All good**.
+The bottom line names what is missing, what is wrong, or says **All good**.
 
 ## Before you start
 
