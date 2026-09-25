@@ -74,30 +74,37 @@ internal static class UsbCableProbe
             return;
         }
 
-        using (key)
+        try
         {
-            if (key.GetValue("FriendlyName") is string name)
+            using (key)
             {
-                var open = name.LastIndexOf("(COM", StringComparison.OrdinalIgnoreCase);
-                var close = open >= 0 ? name.IndexOf(')', open) : -1;
-                if (close > open)
+                if (key.GetValue("FriendlyName") is string name)
                 {
-                    var port = name[(open + 1)..close];
-                    into[port] = name;
+                    var open = name.LastIndexOf("(COM", StringComparison.OrdinalIgnoreCase);
+                    var close = open >= 0 ? name.IndexOf(')', open) : -1;
+                    if (close > open)
+                    {
+                        var port = name[(open + 1)..close];
+                        into[port] = name;
+                    }
                 }
-            }
 
-            foreach (var child in key.GetSubKeyNames())
-            {
-                try
+                foreach (var child in key.GetSubKeyNames())
                 {
-                    Collect(key.OpenSubKey(child), into, depth + 1);
-                }
-                catch
-                {
-                    // One unreadable device key should not hide the cable.
+                    try
+                    {
+                        Collect(key.OpenSubKey(child), into, depth + 1);
+                    }
+                    catch
+                    {
+                        // One unreadable device key should not hide the cable.
+                    }
                 }
             }
+        }
+        catch
+        {
+            // Windows locks some device keys even for an administrator.
         }
     }
 }
