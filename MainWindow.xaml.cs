@@ -35,6 +35,8 @@ public partial class MainWindow : Window
         {
             if (args.PropertyName is nameof(SessionViewModel.IsCarSide) or nameof(SessionViewModel.CanSwitch))
                 PaintRoles();
+            if (args.PropertyName is nameof(SessionViewModel.CodeInput) or nameof(SessionViewModel.SessionOn) or nameof(SessionViewModel.RelayReady))
+                SetNextStep(_lastScan);
         };
     }
 
@@ -498,71 +500,70 @@ public partial class MainWindow : Window
         Process.Start(new ProcessStartInfo(_vm.DriverUrl) { UseShellExecute = true });
     }
 
+    private void Mark(string word, string detail)
+    {
+        _vm.CheckWord = word;
+        _vm.NextDetail = detail;
+    }
+
     private void SetNextStep(ScanResult? result)
     {
         _vm.ShowDriver = false;
         if (_vm.SessionOn && _vm.Session.State == "warn")
         {
-            _vm.NextTitle = "Do this now";
-            _vm.NextDetail = "The firewall is still off from the last session. Click Stop to put the old settings back.";
-            return;
-        }
-
-        if (_vm.SessionOn && _vm.IsCarSide)
-        {
-            _vm.NextTitle = "Session is on";
-            _vm.NextDetail = "Read " + _vm.SessionCode + " to the other laptop. E-Sys uses 127.0.0.1.";
+            Mark("Wrong", "The firewall is still off from the last session. Click Stop to put the old settings back.");
             return;
         }
 
         if (_vm.SessionOn)
         {
-            _vm.NextTitle = "Session is on";
-            _vm.NextDetail = "E-Sys address is 127.0.0.1. Leave this window open.";
+            Mark("All good", _vm.IsCarSide
+                ? "Read the code to the other laptop. Leave this window open."
+                : "E-Sys address is 127.0.0.1. Leave this window open.");
             return;
         }
 
         if (!_vm.IsCarSide)
         {
-            _vm.NextTitle = "E-Sys laptop";
-            _vm.NextDetail = "Type the code from the car laptop. E-Sys address is 127.0.0.1.";
+            if (SessionLink.Digits(_vm.CodeInput).Length != 6)
+            {
+                Mark("Missing", "Type the 6-digit code from the car laptop.");
+                return;
+            }
+
+            Mark(_vm.RelayReady ? "All good" : "Missing",
+                _vm.RelayReady ? "" : "The session server is not set, so Join cannot reach the car laptop.");
             return;
         }
 
-        if (_vm.IsCarSide && AppSettings.Cable == CableKind.Kdcan && result is { CableState: "ok" })
+        if (AppSettings.Cable == CableKind.Kdcan && result is { CableState: "ok" })
         {
-            _vm.NextTitle = "K+DCAN";
-            _vm.NextDetail = "K+DCAN is in. The code session is for ENET, MHD, and ICOM.";
+            Mark("Wrong", "K+DCAN is in. The code session is for ENET, MHD, and ICOM.");
             return;
         }
 
-        if (_vm.IsCarSide && result is not null && result.CableState != "ok")
+        if (result is not null && result.CableState != "ok")
         {
-            _vm.NextTitle = "Do this now";
             if (!string.IsNullOrEmpty(result.DriverMessage))
             {
-                _vm.NextDetail = result.DriverMessage;
                 _vm.DriverUrl = result.DriverUrl;
                 _vm.ShowDriver = result.DriverUrl.Length > 0;
+                Mark("Wrong", result.DriverMessage);
             }
             else
             {
-                _vm.NextDetail = AppSettings.PlugSentence;
-                _vm.ShowDriver = false;
+                Mark("Missing", AppSettings.PlugSentence);
             }
             return;
         }
 
-        if (_vm.IsCarSide && string.IsNullOrEmpty(_vm.VehicleIp))
+        if (string.IsNullOrEmpty(_vm.VehicleIp))
         {
-            _vm.NextTitle = "Do this now";
-            _vm.NextDetail = "Turn the ignition on. If it stays quiet, the battery may be too low.";
+            Mark("Missing", "Turn the ignition on. If it stays quiet, the battery may be too low.");
             return;
         }
 
-        _vm.NextTitle = "Ready";
-        _vm.NextDetail = _vm.RelayReady
-            ? "Get code, then read it to the other laptop."
-            : "The module is awake. The session server is not set, so the code stays on this laptop.";
+        Mark(_vm.RelayReady ? "All good" : "Missing",
+            _vm.RelayReady ? "" : "The module is awake. The session server is not set, so the code stays on this laptop.");
     }
 }
