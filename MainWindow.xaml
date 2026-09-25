@@ -226,6 +226,8 @@
 
         <StackPanel Grid.Row="5">
             <TextBlock Text="{Binding NextDetail}" FontSize="13" Foreground="#b7c3d1" TextWrapping="Wrap"/>
+            <Button Content="Open driver page" Style="{StaticResource TextButton}" HorizontalAlignment="Left" Margin="0,8,0,0"
+                    Click="Driver_Click" Visibility="{Binding ShowDriver, Converter={StaticResource BoolVis}}"/>
             <TextBlock Text="{Binding LastLine}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0" Foreground="#e8b15a"
                        Visibility="{Binding LastLineAlert, Converter={StaticResource BoolVis}}"/>
         </StackPanel>

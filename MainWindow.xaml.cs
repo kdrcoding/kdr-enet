@@ -491,8 +491,16 @@ public partial class MainWindow : Window
             _vm.AddLog(note);
     }
 
+    private void Driver_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(_vm.DriverUrl))
+            return;
+        Process.Start(new ProcessStartInfo(_vm.DriverUrl) { UseShellExecute = true });
+    }
+
     private void SetNextStep(ScanResult? result)
     {
+        _vm.ShowDriver = false;
         if (_vm.SessionOn && _vm.Session.State == "warn")
         {
             _vm.NextTitle = "Do this now";
@@ -531,7 +539,17 @@ public partial class MainWindow : Window
         if (_vm.IsCarSide && result is not null && result.CableState != "ok")
         {
             _vm.NextTitle = "Do this now";
-            _vm.NextDetail = AppSettings.PlugSentence;
+            if (!string.IsNullOrEmpty(result.DriverMessage))
+            {
+                _vm.NextDetail = result.DriverMessage;
+                _vm.DriverUrl = result.DriverUrl;
+                _vm.ShowDriver = result.DriverUrl.Length > 0;
+            }
+            else
+            {
+                _vm.NextDetail = AppSettings.PlugSentence;
+                _vm.ShowDriver = false;
+            }
             return;
         }
 

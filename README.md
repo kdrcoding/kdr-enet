@@ -4,7 +4,9 @@ Remote **BMW** coding with a session code.
 
 The laptop on the car and the laptop running E-Sys do not need the same Wi-Fi. The car side shows a 6-digit code. The E-Sys side types it. E-Sys uses `127.0.0.1`.
 
-**[Download KdrEnet.exe](https://github.com/kdrcoding/kdr-enet/releases/latest)** · Windows · click **Yes**
+**[Download KdrEnet.exe](https://github.com/kdrcoding/kdr-enet/releases/latest)** · Windows 10 or 11, 64-bit · click **Yes**
+
+You do not install .NET. It is already inside the download. The app itself does not need a driver to open.
 
 <p align="center">
   <img src="docs/car.png" width="360" alt="KDR ENET on the car laptop. The BMW session code appears in the Code box.">
@@ -39,6 +41,17 @@ Cables for the session: **ENET**, **MHD**, **ICOM**.
 Pick the cable and **Car** or **Bike**.
 
 K+DCAN only shows that the USB cable is plugged in. The code session is for ENET, MHD, and ICOM.
+
+## Cable driver
+
+Windows 10 and 11 usually already have the cable driver. If the cable is plugged in and the app still says the driver is missing, click **Open driver page** in the app.
+
+- K+DCAN, FTDI chip: [FTDI VCP driver](https://ftdichip.com/drivers/vcp-drivers/)
+- K+DCAN, CH340 chip: [WCH CH340 driver](https://www.wch-ic.com/downloads/CH341SER_EXE.html)
+- ENET, ASIX chip: [ASIX driver](https://www.asix.com.tw/en/support/download)
+- ENET, Realtek chip: [Realtek downloads](https://www.realtek.com/en/downloads)
+
+The E-Sys laptop does not need a cable driver.
 
 ## Before you start
 

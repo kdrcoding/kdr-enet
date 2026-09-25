@@ -54,10 +54,11 @@ public sealed class SessionService
         var adapters = FindDiagAdapters(AppSettings.Cable);
         if (adapters.Count == 0)
         {
+            var driver = DriverCheck.Find(AppSettings.Cable);
             return new ScanResult
             {
                 CableState = "wait",
-                CableDetail = "Not connected",
+                CableDetail = driver is null ? "Not connected" : "Driver missing",
                 PowerState = "wait",
                 PowerDetail = "Waiting",
                 VehicleState = "wait",
@@ -65,7 +66,9 @@ public sealed class SessionService
                 VehicleTitle = title,
                 BestTechnician = best,
                 OtherTechnicians = others,
-                Notes = new[] { "No " + AppSettings.CableLabel + " adapter yet." }
+                Notes = new[] { "No " + AppSettings.CableLabel + " adapter yet." },
+                DriverMessage = driver?.Message ?? "",
+                DriverUrl = driver?.Url ?? ""
             };
         }
 
@@ -128,10 +131,11 @@ public sealed class SessionService
         var port = UsbCableProbe.FindKdcanPort();
         if (port is null)
         {
+            var driver = DriverCheck.Find(CableKind.Kdcan);
             return new ScanResult
             {
                 CableState = "wait",
-                CableDetail = "Not connected",
+                CableDetail = driver is null ? "Not connected" : "Driver missing",
                 PowerState = "wait",
                 PowerDetail = "Waiting",
                 VehicleState = "wait",
@@ -139,7 +143,9 @@ public sealed class SessionService
                 VehicleTitle = title,
                 BestTechnician = best,
                 OtherTechnicians = others,
-                Notes = new[] { "No K+DCAN USB cable yet." }
+                Notes = new[] { "No K+DCAN USB cable yet." },
+                DriverMessage = driver?.Message ?? "",
+                DriverUrl = driver?.Url ?? ""
             };
         }
 
@@ -700,6 +706,8 @@ public sealed class ScanResult
     public TechnicianAddress? BestTechnician { get; init; }
     public IReadOnlyList<TechnicianAddress> OtherTechnicians { get; init; } = Array.Empty<TechnicianAddress>();
     public IReadOnlyList<string> Notes { get; init; } = Array.Empty<string>();
+    public string DriverMessage { get; init; } = "";
+    public string DriverUrl { get; init; } = "";
 }
 
 public sealed record TechnicianAddress(string Ip, string Name, int Rank);
