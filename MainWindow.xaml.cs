@@ -130,7 +130,8 @@ public partial class MainWindow : Window
             {
                 _vm.LastLineAlert = false;
                 _vm.SessionCode = SessionLink.FormatCode(code);
-                _vm.AddLog("Code " + SessionLink.Digits(code) + " is on this laptop. The other laptop cannot join until the session server is set.");
+                _vm.SessionOn = true;
+                _vm.AddLog("Code " + SessionLink.Digits(code) + " stays on this laptop. The other laptop cannot join until the session server is set.");
                 return;
             }
 
@@ -560,8 +561,14 @@ public partial class MainWindow : Window
 
         if (_vm.SessionOn)
         {
+            if (_vm.IsCarSide && !_vm.RelayReady)
+            {
+                Mark("good", "All good. This code stays until you click Stop. The other laptop cannot join until the session server is set.");
+                return;
+            }
+
             Mark("good", _vm.IsCarSide
-                ? "All good. Read the code above to the other laptop. Leave this window open."
+                ? "All good. This code stays. Read it to the other laptop. Leave this window open."
                 : "All good. In E-Sys use tcp://127.0.0.1:6801. Leave this window open.");
             return;
         }
