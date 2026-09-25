@@ -1,37 +1,51 @@
 # KDR ENET
 
-Remote car session with a code. No Radmin. The laptops do not need the same Wi-Fi.
+Remote **BMW** coding with a session code.
 
-**Download:** [KdrEnet.exe](https://github.com/kdrcoding/kdr-enet/releases/latest)  
-Windows. Click **Yes** when the prompt shows.
+The laptop on the car and the laptop running E-Sys do not need the same Wi-Fi. The car side shows a 6-digit code. The E-Sys side types it. E-Sys uses `127.0.0.1`.
 
-## 🚗 Car laptop
+**[Download KdrEnet.exe](https://github.com/kdrcoding/kdr-enet/releases/latest)** · Windows · click **Yes**
+
+<p align="center">
+  <img src="docs/car.png" width="360" alt="KDR ENET on the car laptop. The BMW session code appears in the Code box.">
+  &nbsp;&nbsp;
+  <img src="docs/esys.png" width="360" alt="KDR ENET on the E-Sys laptop. Type the BMW session code, then use 127.0.0.1 in E-Sys.">
+</p>
+
+## Car laptop · with the BMW
 
 1. Open KDR ENET → **Car laptop**
-2. Cable in. Ignition on. Wait until it says the module is awake
-3. **Get code**
-4. Read the code out loud. Leave the window open
+2. Cable in. Ignition on. Wait until the module is awake
+3. **Get code** — the number shows up in the **Code** box
+4. Read it to the other laptop. Leave this window open
 
-## 💻 E-Sys laptop
+Cables for the session: **ENET**, **MHD**, **ICOM**.
+
+## E-Sys laptop
 
 1. Open KDR ENET → **E-Sys laptop**
-2. Type the code → **Join**
-3. In E-Sys use `127.0.0.1`
-4. Leave the window open
+2. Type the code in the **Code** box → **Join**
+3. In E-Sys set the address to `127.0.0.1`
+4. Leave this window open
 
-**Stop** on both laptops when the work is done.
+**Stop** on both laptops when the coding is done.
 
-## ⚙️ Settings
+## Settings
 
-Cable: **ENET**, **MHD**, or **ICOM**.  
-K+DCAN only shows that the USB cable is plugged in. The code is for ENET, MHD, and ICOM.
+<p align="center">
+  <img src="docs/settings.png" width="320" alt="Settings for BMW cable type and car or bike.">
+</p>
 
-Car or bike is in Settings too.
+Pick the cable and **Car** or **Bike**.
 
-## 📌 Before a session
+K+DCAN only shows that the USB cable is plugged in. The code session is for ENET, MHD, and ICOM.
+
+## Before you start
 
 - First open: read the terms → **I agree**
 - **Awake** means the module answered. It is not a battery voltage
-- If **Get code** says the session server is not set, the code cannot reach the other laptop yet
+- If **Get code** says the session server is not set, that code cannot reach the other laptop yet
 
-Created by Kadir · [kdrcoding.com](https://kdrcoding.com)
+KDR ENET is an independent tool for a remote BMW session. Not affiliated with BMW.
+
+Created by Kadir · [kdrcoding.com](https://kdrcoding.com) · support@kdrcoding.com

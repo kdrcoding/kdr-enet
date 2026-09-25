@@ -10,8 +10,8 @@ public partial class AboutWindow : Window
     {
         InitializeComponent();
         var version = Assembly.GetExecutingAssembly().GetName().Version;
-        var label = version is null ? "1.1" : version.Major + "." + version.Minor;
-        VersionLine.Text = "KDR ENET " + label + "  ·  ENET session link";
+        var label = version is null ? "1.1" : version.ToString(3);
+        VersionLine.Text = label;
         CreatorLine.Text = "Created by " + LegalCopy.Creator;
         TermsBox.Text = LegalCopy.Terms;
         if (!requireConsent)

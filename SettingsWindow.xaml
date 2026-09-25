@@ -2,82 +2,102 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Settings"
-        Width="480"
-        Height="560"
+        Width="400"
+        SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        Background="#05070d"
+        Background="#0b0d13"
         Foreground="#f4f7fb"
         FontFamily="Segoe UI"
         ShowInTaskbar="False"
         UseLayoutRounding="True"
         SnapsToDevicePixels="True">
     <Window.Resources>
-        <Style TargetType="Button">
+        <Style x:Key="Pick" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#8ea0b5"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="0,0,0,6"/>
+            <Setter Property="Margin" Value="0,0,18,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border Background="Transparent" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SaveButton" TargetType="Button">
+            <Setter Property="Background" Value="#1C69D4"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="MinWidth" Value="88"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="CancelButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#f4f7fb"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="MinWidth" Value="88"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="Transparent" BorderBrush="#2a3344" BorderThickness="1" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
     </Window.Resources>
-    <Grid Margin="28">
+
+    <Grid Margin="28,22">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock FontSize="20" FontWeight="Bold" Margin="0,0,0,18">
-            <Run Text="Settings" Foreground="#f4f7fb"/>
-        </TextBlock>
+        <TextBlock Text="Settings" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,18"/>
 
-        <StackPanel Grid.Row="1" Margin="0,0,0,18">
-            <TextBlock Text="Cable" FontSize="12" Foreground="#8ea0b5" Margin="0,0,0,8"/>
-            <UniformGrid Columns="2" Rows="2">
-                <Button x:Name="EnetButton" Content="ENET" Margin="0,0,8,8" Click="Cable_Click" Tag="Enet"/>
-                <Button x:Name="KdcanButton" Content="K+DCAN" Margin="0,0,0,8" Click="Cable_Click" Tag="Kdcan"/>
-                <Button x:Name="IcomButton" Content="ICOM" Margin="0,0,8,0" Click="Cable_Click" Tag="Icom"/>
-                <Button x:Name="MhdButton" Content="MHD" Click="Cable_Click" Tag="Mhd"/>
-            </UniformGrid>
+        <StackPanel Grid.Row="1">
+            <TextBlock Text="Cable" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,8"/>
+            <WrapPanel>
+                <Button x:Name="EnetButton" Content="ENET" Style="{StaticResource Pick}" Click="Cable_Click" Tag="Enet"/>
+                <Button x:Name="KdcanButton" Content="K+DCAN" Style="{StaticResource Pick}" Click="Cable_Click" Tag="Kdcan"/>
+                <Button x:Name="IcomButton" Content="ICOM" Style="{StaticResource Pick}" Click="Cable_Click" Tag="Icom"/>
+                <Button x:Name="MhdButton" Content="MHD" Style="{StaticResource Pick}" Click="Cable_Click" Tag="Mhd"/>
+            </WrapPanel>
         </StackPanel>
 
-        <StackPanel Grid.Row="2" Margin="0,0,0,18">
-            <TextBlock Text="Vehicle" FontSize="12" Foreground="#8ea0b5" Margin="0,0,0,8"/>
-            <UniformGrid Columns="2">
-                <Button x:Name="CarButton" Content="Car" Margin="0,0,8,0" Click="Vehicle_Click" Tag="Car"/>
-                <Button x:Name="BikeButton" Content="Bike" Click="Vehicle_Click" Tag="Bike"/>
-            </UniformGrid>
+        <StackPanel Grid.Row="2" Margin="0,6,0,0">
+            <TextBlock Text="Vehicle" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,8"/>
+            <WrapPanel>
+                <Button x:Name="CarButton" Content="Car" Style="{StaticResource Pick}" Click="Vehicle_Click" Tag="Car"/>
+                <Button x:Name="BikeButton" Content="Bike" Style="{StaticResource Pick}" Click="Vehicle_Click" Tag="Bike"/>
+            </WrapPanel>
         </StackPanel>
 
-        <TextBlock Grid.Row="3" TextWrapping="Wrap" Foreground="#8ea0b5" FontSize="13" LineHeight="20"
-                   Text="Power on the main window means the module is awake and answering on the cable. It is not a voltmeter. If the module stays quiet with the ignition on, the battery may be too low. A backup of every module is done in E-Sys. This app does not copy that coding data."/>
-
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="Cancel" MinWidth="100" Margin="0,0,8,0" Click="Cancel_Click" Padding="16,10" Cursor="Hand" FontWeight="SemiBold" Foreground="#f4f7fb">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="Transparent" BorderBrush="#243044" BorderThickness="1" CornerRadius="8" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Button.Template>
-            </Button>
-            <Button Content="Save" MinWidth="110" Click="Save_Click" Padding="16,10" Cursor="Hand" FontWeight="SemiBold" Foreground="White">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="#0096d6" CornerRadius="8" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Button.Template>
-            </Button>
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <Button Content="Cancel" Style="{StaticResource CancelButton}" Margin="0,0,8,0" Click="Cancel_Click"/>
+            <Button Content="Save" Style="{StaticResource SaveButton}" Click="Save_Click"/>
         </StackPanel>
     </Grid>
 </Window>
