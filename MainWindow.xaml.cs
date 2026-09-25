@@ -23,6 +23,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        WireSlots();
         DataContext = _vm;
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         _vm.VersionText = version is null ? "1.0" : version.Major + "." + version.Minor;
@@ -177,37 +178,115 @@ public partial class MainWindow : Window
         await ScanAsync(probe: true);
     }
 
-    private void Code_Preview(object sender, TextCompositionEventArgs e)
+    private bool _fillingSlots;
+
+    private TextBox[] Slots() => [Digit0, Digit1, Digit2, Digit3, Digit4, Digit5];
+
+    private void WireSlots()
     {
-        foreach (var character in e.Text)
+        foreach (var slot in Slots())
         {
-            if (character is < '0' or > '9')
-            {
-                e.Handled = true;
-                return;
-            }
+            slot.PreviewTextInput += Slot_Preview;
+            slot.PreviewKeyDown += Slot_Key;
+            slot.TextChanged += Slot_Changed;
+            DataObject.AddPastingHandler(slot, Slot_Paste);
         }
     }
 
-    private void Code_Paste(object sender, DataObjectPastingEventArgs e)
+    private int SlotIndex(TextBox box)
     {
+        var slots = Slots();
+        for (var i = 0; i < slots.Length; i++)
+        {
+            if (ReferenceEquals(slots[i], box))
+                return i;
+        }
+
+        return 0;
+    }
+
+    private void Slot_Preview(object sender, TextCompositionEventArgs e)
+    {
+        if (sender is not TextBox box || e.Text.Length != 1 || e.Text[0] is < '0' or > '9')
+        {
+            e.Handled = true;
+            return;
+        }
+
+        _fillingSlots = true;
+        box.Text = e.Text;
+        _fillingSlots = false;
+        e.Handled = true;
+        PullCode();
+        var next = SlotIndex(box) + 1;
+        if (next < 6)
+            Slots()[next].Focus();
+    }
+
+    private void Slot_Key(object sender, KeyEventArgs e)
+    {
+        if (sender is not TextBox box)
+            return;
+        var index = SlotIndex(box);
+        var slots = Slots();
+        if (e.Key == Key.Back && box.Text.Length == 0 && index > 0)
+        {
+            slots[index - 1].Text = "";
+            slots[index - 1].Focus();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Left && index > 0)
+        {
+            slots[index - 1].Focus();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Right && index < 5)
+        {
+            slots[index + 1].Focus();
+            e.Handled = true;
+        }
+    }
+
+    private void Slot_Changed(object sender, TextChangedEventArgs e)
+    {
+        if (_fillingSlots)
+            return;
+        PullCode();
+    }
+
+    private void Slot_Paste(object sender, DataObjectPastingEventArgs e)
+    {
+        e.CancelCommand();
         if (sender is not TextBox box || !e.DataObject.GetDataPresent(DataFormats.Text))
-        {
-            e.CancelCommand();
             return;
-        }
-
         var digits = SessionLink.Digits(e.DataObject.GetData(DataFormats.Text) as string);
-        var room = 6 - (box.Text.Length - box.SelectionLength);
-        if (digits.Length == 0 || room <= 0)
-        {
-            e.CancelCommand();
+        if (digits.Length == 0)
             return;
+        if (digits.Length > 6)
+            digits = digits[..6];
+        var start = digits.Length == 6 ? 0 : SlotIndex(box);
+        var slots = Slots();
+        _fillingSlots = true;
+        var at = start;
+        foreach (var character in digits)
+        {
+            if (at >= slots.Length)
+                break;
+            slots[at].Text = character.ToString();
+            at++;
         }
+        _fillingSlots = false;
+        PullCode();
+        slots[Math.Min(at, 5)].Focus();
+    }
 
-        if (digits.Length > room)
-            digits = digits[..room];
-        e.DataObject = new DataObject(DataFormats.Text, digits);
+    private void PullCode()
+    {
+        var text = string.Concat(Slots().Select(slot => SessionLink.Digits(slot.Text)));
+        if (text.Length > 6)
+            text = text[..6];
+        if (_vm.CodeInput != text)
+            _vm.CodeInput = text;
     }
 
     private async void Join_Click(object sender, RoutedEventArgs e)
@@ -281,6 +360,8 @@ public partial class MainWindow : Window
         _signature = "";
         PaintRoles();
         SetNextStep(_lastScan);
+        if (!car)
+            Digit0.Focus();
     }
 
     private void PaintRoles()

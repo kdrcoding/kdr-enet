@@ -16,15 +16,15 @@ The laptop on the car and the laptop running E-Sys do not need the same Wi-Fi. T
 
 1. Open KDR ENET → **Car laptop**
 2. Cable in. Ignition on. Wait until the module is awake
-3. **Get code** — the number shows up in the **Code** box
-4. Read it to the other laptop. Leave this window open
+3. **Get code** — read the six numbers out loud
+4. Leave this window open
 
 Cables for the session: **ENET**, **MHD**, **ICOM**.
 
 ## E-Sys laptop
 
 1. Open KDR ENET → **E-Sys laptop**
-2. Type the code in the **Code** box → **Join**
+2. Type the code in the **6 boxes** → **Join**
 3. In E-Sys set the address to `127.0.0.1`
 4. Leave this window open
 

@@ -199,6 +199,21 @@ public sealed class SessionViewModel : INotifyPropertyChanged
 
     public string DisplayCode => SessionLink.Digits(SessionCode).Length == 6 ? SessionLink.FormatCode(SessionCode) : "—";
 
+    public bool CodeReady => SessionLink.Digits(SessionCode).Length == 6;
+
+    public string Shown0 => ShownAt(0);
+    public string Shown1 => ShownAt(1);
+    public string Shown2 => ShownAt(2);
+    public string Shown3 => ShownAt(3);
+    public string Shown4 => ShownAt(4);
+    public string Shown5 => ShownAt(5);
+
+    private string ShownAt(int index)
+    {
+        var digits = SessionLink.Digits(SessionCode);
+        return digits.Length == 6 ? digits[index].ToString() : "–";
+    }
+
     public string CarHelp => SessionLink.Digits(SessionCode).Length == 6
         ? "Read this code to the E-Sys laptop. Leave this window open."
         : "Click Get code. The number shows here. Read it to the E-Sys laptop.";
@@ -231,6 +246,13 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(StartLabel));
         OnPropertyChanged(nameof(JoinLabel));
         OnPropertyChanged(nameof(DisplayCode));
+        OnPropertyChanged(nameof(CodeReady));
+        OnPropertyChanged(nameof(Shown0));
+        OnPropertyChanged(nameof(Shown1));
+        OnPropertyChanged(nameof(Shown2));
+        OnPropertyChanged(nameof(Shown3));
+        OnPropertyChanged(nameof(Shown4));
+        OnPropertyChanged(nameof(Shown5));
         OnPropertyChanged(nameof(CarHelp));
         OnPropertyChanged(nameof(CopyLabel));
         OnPropertyChanged(nameof(ShowCopy));

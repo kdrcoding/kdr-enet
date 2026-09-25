@@ -89,25 +89,42 @@
             </Setter>
         </Style>
 
-        <Style x:Key="CodeBox" TargetType="TextBox">
+        <Style x:Key="DigitBox" TargetType="TextBox">
+            <Setter Property="Width" Value="56"/>
+            <Setter Property="Height" Value="64"/>
+            <Setter Property="MaxLength" Value="1"/>
+            <Setter Property="FontSize" Value="26"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Background" Value="#12161e"/>
             <Setter Property="Foreground" Value="#f4f7fb"/>
             <Setter Property="CaretBrush" Value="#f4f7fb"/>
             <Setter Property="BorderBrush" Value="#3d4d66"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="FontSize" Value="32"/>
-            <Setter Property="MinHeight" Value="64"/>
-            <Setter Property="Padding" Value="14,10"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
-                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
-                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"/>
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                            <ScrollViewer x:Name="PART_ContentHost" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <Style x:Key="DigitRead" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="40"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="#8ea0b5"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding CodeReady}" Value="True">
+                    <Setter Property="Foreground" Value="#f4f7fb"/>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="TextButton" TargetType="Button">
@@ -169,28 +186,30 @@
 
         <StackPanel Grid.Row="3" VerticalAlignment="Center">
             <StackPanel Visibility="{Binding IsCarSide, Converter={StaticResource BoolVis}}">
-                <TextBlock FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,8">
-                    <Run Text="Code"/>
-                    <Run Text="  ·  6 digits" Foreground="#5c6b80"/>
-                </TextBlock>
-                <Border Background="#12161e" BorderBrush="#3d4d66" BorderThickness="1" Padding="14,12" MinHeight="64">
-                    <TextBlock Text="{Binding DisplayCode}" FontSize="36" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                </Border>
+                <TextBlock Text="Read this out" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,10"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding Shown0}" Style="{StaticResource DigitRead}"/>
+                    <TextBlock Text="{Binding Shown1}" Style="{StaticResource DigitRead}"/>
+                    <TextBlock Text="{Binding Shown2}" Style="{StaticResource DigitRead}" Margin="0,0,16,0"/>
+                    <TextBlock Text="{Binding Shown3}" Style="{StaticResource DigitRead}"/>
+                    <TextBlock Text="{Binding Shown4}" Style="{StaticResource DigitRead}"/>
+                    <TextBlock Text="{Binding Shown5}" Style="{StaticResource DigitRead}"/>
+                </StackPanel>
             </StackPanel>
             <StackPanel Visibility="{Binding IsTechSide, Converter={StaticResource BoolVis}}">
-                <TextBlock FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,8">
-                    <Run Text="Code"/>
-                    <Run Text="  ·  6 digits" Foreground="#5c6b80"/>
+                <TextBlock Text="Type the code" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,10"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="Digit0" Style="{StaticResource DigitBox}"/>
+                    <TextBox x:Name="Digit1" Style="{StaticResource DigitBox}"/>
+                    <TextBox x:Name="Digit2" Style="{StaticResource DigitBox}" Margin="0,0,18,0"/>
+                    <TextBox x:Name="Digit3" Style="{StaticResource DigitBox}"/>
+                    <TextBox x:Name="Digit4" Style="{StaticResource DigitBox}"/>
+                    <TextBox x:Name="Digit5" Style="{StaticResource DigitBox}" Margin="0"/>
+                </StackPanel>
+                <TextBlock Margin="0,18,0,0" FontSize="14">
+                    <Run Text="E-Sys address" Foreground="#8ea0b5"/>
+                    <Run Text="   127.0.0.1" Foreground="#f4f7fb" FontSize="18" FontWeight="SemiBold"/>
                 </TextBlock>
-                <TextBox Style="{StaticResource CodeBox}"
-                         Text="{Binding CodeInput, UpdateSourceTrigger=PropertyChanged}"
-                         MaxLength="6"
-                         PreviewTextInput="Code_Preview"
-                         DataObject.Pasting="Code_Paste"/>
-                <TextBlock Margin="0,14,0,8" FontSize="13" Foreground="#8ea0b5" Text="E-Sys address"/>
-                <Border Background="#12161e" BorderBrush="#3d4d66" BorderThickness="1" Padding="14,10">
-                    <TextBlock Text="127.0.0.1" FontSize="22" FontWeight="SemiBold"/>
-                </Border>
             </StackPanel>
         </StackPanel>
 
