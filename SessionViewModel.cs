@@ -230,6 +230,21 @@ public sealed class SessionViewModel : INotifyPropertyChanged
 
     public bool CanStop => !IsBusy && SessionOn;
 
+    private string _driverUrl = "";
+    private bool _showDriver;
+
+    public string DriverUrl
+    {
+        get => _driverUrl;
+        set => Set(ref _driverUrl, value);
+    }
+
+    public bool ShowDriver
+    {
+        get => _showDriver;
+        set => Set(ref _showDriver, value);
+    }
+
     public void AddLog(string text, bool alert = false)
     {
         Lines.Add(new LogLine(text, alert));
