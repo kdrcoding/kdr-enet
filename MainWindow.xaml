@@ -169,14 +169,24 @@
 
         <StackPanel Grid.Row="3" VerticalAlignment="Center">
             <StackPanel Visibility="{Binding IsCarSide, Converter={StaticResource BoolVis}}">
-                <TextBlock Text="Code" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,8"/>
+                <TextBlock FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,8">
+                    <Run Text="Code"/>
+                    <Run Text="  ·  6 digits" Foreground="#5c6b80"/>
+                </TextBlock>
                 <Border Background="#12161e" BorderBrush="#3d4d66" BorderThickness="1" Padding="14,12" MinHeight="64">
                     <TextBlock Text="{Binding DisplayCode}" FontSize="36" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 </Border>
             </StackPanel>
             <StackPanel Visibility="{Binding IsTechSide, Converter={StaticResource BoolVis}}">
-                <TextBlock Text="Code" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,8"/>
-                <TextBox Style="{StaticResource CodeBox}" Text="{Binding CodeInput, UpdateSourceTrigger=PropertyChanged}" MaxLength="32"/>
+                <TextBlock FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,8">
+                    <Run Text="Code"/>
+                    <Run Text="  ·  6 digits" Foreground="#5c6b80"/>
+                </TextBlock>
+                <TextBox Style="{StaticResource CodeBox}"
+                         Text="{Binding CodeInput, UpdateSourceTrigger=PropertyChanged}"
+                         MaxLength="6"
+                         PreviewTextInput="Code_Preview"
+                         DataObject.Pasting="Code_Paste"/>
                 <TextBlock Margin="0,14,0,8" FontSize="13" Foreground="#8ea0b5" Text="E-Sys address"/>
                 <Border Background="#12161e" BorderBrush="#3d4d66" BorderThickness="1" Padding="14,10">
                     <TextBlock Text="127.0.0.1" FontSize="22" FontWeight="SemiBold"/>

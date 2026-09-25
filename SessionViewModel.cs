@@ -81,7 +81,10 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         get => _codeInput;
         set
         {
-            if (!Set(ref _codeInput, value))
+            var digits = SessionLink.Digits(value);
+            if (digits.Length > 6)
+                digits = digits[..6];
+            if (!Set(ref _codeInput, digits))
                 return;
             NotifyCommands();
         }

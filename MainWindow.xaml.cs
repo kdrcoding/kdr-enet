@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Threading;
 using KdrEnet.Services;
 
@@ -173,6 +175,39 @@ public partial class MainWindow : Window
     {
         _signature = "";
         await ScanAsync(probe: true);
+    }
+
+    private void Code_Preview(object sender, TextCompositionEventArgs e)
+    {
+        foreach (var character in e.Text)
+        {
+            if (character is < '0' or > '9')
+            {
+                e.Handled = true;
+                return;
+            }
+        }
+    }
+
+    private void Code_Paste(object sender, DataObjectPastingEventArgs e)
+    {
+        if (sender is not TextBox box || !e.DataObject.GetDataPresent(DataFormats.Text))
+        {
+            e.CancelCommand();
+            return;
+        }
+
+        var digits = SessionLink.Digits(e.DataObject.GetData(DataFormats.Text) as string);
+        var room = 6 - (box.Text.Length - box.SelectionLength);
+        if (digits.Length == 0 || room <= 0)
+        {
+            e.CancelCommand();
+            return;
+        }
+
+        if (digits.Length > room)
+            digits = digits[..room];
+        e.DataObject = new DataObject(DataFormats.Text, digits);
     }
 
     private async void Join_Click(object sender, RoutedEventArgs e)
