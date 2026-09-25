@@ -1,3 +1,4 @@
+using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 
@@ -11,7 +12,16 @@ internal static class DriverCheck
     {
         foreach (var root in new[] { "USB", "FTDIBUS" })
         {
-            using var key = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Enum\" + root);
+            RegistryKey? key;
+            try
+            {
+                key = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Enum\" + root);
+            }
+            catch (Exception ex) when (IsLocked(ex))
+            {
+                continue;
+            }
+
             var hint = Walk(key, root, cable, 0);
             if (hint is not null)
                 return hint;
@@ -28,25 +38,55 @@ internal static class DriverCheck
             return null;
         }
 
-        using (key)
+        try
         {
-            if (NeedsDriver(instanceId, key))
+            using (key)
             {
-                var hint = Match(instanceId + " " + ReadName(key), cable);
-                if (hint is not null)
-                    return hint;
-            }
+                if (NeedsDriver(instanceId, key))
+                {
+                    var hint = Match(instanceId + " " + ReadName(key), cable);
+                    if (hint is not null)
+                        return hint;
+                }
 
-            foreach (var name in key.GetSubKeyNames())
-            {
-                var hint = Walk(key.OpenSubKey(name), instanceId + "\\" + name, cable, depth + 1);
-                if (hint is not null)
-                    return hint;
+                string[] names;
+                try
+                {
+                    names = key.GetSubKeyNames();
+                }
+                catch (Exception ex) when (IsLocked(ex))
+                {
+                    return null;
+                }
+
+                foreach (var name in names)
+                {
+                    RegistryKey? child;
+                    try
+                    {
+                        child = key.OpenSubKey(name);
+                    }
+                    catch (Exception ex) when (IsLocked(ex))
+                    {
+                        continue;
+                    }
+
+                    var hint = Walk(child, instanceId + "\\" + name, cable, depth + 1);
+                    if (hint is not null)
+                        return hint;
+                }
             }
+        }
+        catch (Exception ex) when (IsLocked(ex))
+        {
+            return null;
         }
 
         return null;
     }
+
+    private static bool IsLocked(Exception ex)
+        => ex is UnauthorizedAccessException or System.Security.SecurityException or IOException;
 
     private static bool NeedsDriver(string instanceId, RegistryKey key)
     {
