@@ -16,6 +16,8 @@ public partial class MainWindow : Window
     private int _scanGate;
     private string _signature = "";
     private ScanResult? _lastScan;
+    private string? _heldVehicleIp;
+    private int _quietScans;
     private bool _sideChosen;
     private bool _shutdown;
     private bool _closeWarned;
@@ -28,7 +30,7 @@ public partial class MainWindow : Window
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         _vm.VersionText = version is null ? "1.0" : version.Major + "." + version.Minor;
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(4) };
-        _timer.Tick += async (_, _) => await ScanAsync();
+        _timer.Tick += async (_, _) => await ScanAsync(probe: _lastScan?.CableState == "ok");
         Loaded += OnLoaded;
         Closing += OnClosing;
         _vm.PropertyChanged += (_, args) =>
@@ -454,6 +456,38 @@ public partial class MainWindow : Window
         }
     }
 
+    private void HoldVehicle(ScanResult result)
+    {
+        if (result.CableState != "ok")
+        {
+            _quietScans = 0;
+            _heldVehicleIp = null;
+            _vm.VehicleIp = null;
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(result.VehicleIp))
+        {
+            _quietScans = 0;
+            _heldVehicleIp = result.VehicleIp;
+            _vm.VehicleIp = result.VehicleIp;
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(_heldVehicleIp) && _quietScans < 2)
+        {
+            _quietScans++;
+            _vm.VehicleIp = _heldVehicleIp;
+            _vm.StatusLine = "Awake  ·  " + result.CableDetail;
+            _vm.Power.Detail = "Awake";
+            _vm.Power.State = "ok";
+            return;
+        }
+
+        _heldVehicleIp = null;
+        _vm.VehicleIp = null;
+    }
+
     private void Apply(ScanResult result)
     {
         _vm.Cable.Detail = result.CableDetail;
@@ -479,7 +513,7 @@ public partial class MainWindow : Window
         {
             _vm.Car.Detail = result.VehicleDetail;
             _vm.Car.State = result.VehicleState;
-            _vm.VehicleIp = result.VehicleIp;
+            HoldVehicle(result);
             if (_vm.Session.State != "warn")
             {
                 _vm.Session.Detail = "Off";
@@ -575,12 +609,14 @@ public partial class MainWindow : Window
 
         if (!_vm.RelayReady)
         {
-            Mark("Missing", SessionLink.Digits(_vm.SessionCode).Length == 6
-                ? "The code is on this screen. The other laptop cannot join until the session server is set."
-                : "The module is awake. Click Get code.");
+            Mark("All good", SessionLink.Digits(_vm.SessionCode).Length == 6
+                ? "Read this code out. The other laptop cannot join until the session server is set."
+                : "Click Get code.");
             return;
         }
 
-        Mark("All good", "");
+        Mark("All good", SessionLink.Digits(_vm.SessionCode).Length == 6
+            ? "Read this code to the other laptop."
+            : "Click Get code, then read it to the other laptop.");
     }
 }
