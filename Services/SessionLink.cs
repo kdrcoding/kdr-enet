@@ -318,6 +318,25 @@ public sealed class SessionLink : IDisposable
 
     public static int? MeasureMilliseconds(string host, int port)
     {
+        if (TimeOnce(host, port) is null)
+            return null;
+
+        var samples = new List<int>(3);
+        for (var i = 0; i < 3; i++)
+        {
+            if (TimeOnce(host, port) is int milliseconds)
+                samples.Add(milliseconds);
+        }
+
+        if (samples.Count == 0)
+            return null;
+
+        samples.Sort();
+        return samples[samples.Count / 2];
+    }
+
+    private static int? TimeOnce(string host, int port)
+    {
         var clock = Stopwatch.StartNew();
         try
         {
