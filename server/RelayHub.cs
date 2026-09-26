@@ -17,7 +17,10 @@ public sealed class RelayHub
     public async Task RunAsync(IPAddress address, int port, CancellationToken ct)
     {
         var listener = new TcpListener(address, port);
-        listener.Start(128);
+        listener.Server.NoDelay = true;
+        listener.Server.ReceiveBufferSize = 512 * 1024;
+        listener.Server.SendBufferSize = 512 * 1024;
+        listener.Start(512);
         try
         {
             while (!ct.IsCancellationRequested)
@@ -33,6 +36,8 @@ public sealed class RelayHub
                 }
 
                 client.NoDelay = true;
+                client.ReceiveBufferSize = 512 * 1024;
+                client.SendBufferSize = 512 * 1024;
                 _ = Task.Run(() => HandleAsync(client, ct));
             }
         }
@@ -120,7 +125,15 @@ public sealed class RelayHub
                     _waiting[key] = list;
                 }
 
-                var index = list.FindIndex(item => item.Role != role);
+                for (var i = list.Count - 1; i >= 0; i--)
+                {
+                    if (IsAlive(list[i].Stream))
+                        continue;
+                    list[i].Ready.TrySetCanceled();
+                    list.RemoveAt(i);
+                }
+
+                var index = list.FindIndex(item => item.Role != role && IsAlive(item.Stream));
                 if (index >= 0)
                 {
                     opposite = list[index];
@@ -208,19 +221,32 @@ public sealed class RelayHub
         throw new IOException("line too long");
     }
 
+    private static bool IsAlive(NetworkStream stream)
+    {
+        try
+        {
+            var socket = stream.Socket;
+            if (!socket.Connected)
+                return false;
+            return !(socket.Poll(0, SelectMode.SelectRead) && socket.Available == 0);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private static async Task PumpAsync(NetworkStream left, NetworkStream right, CancellationToken ct)
     {
         var forward = CopyAsync(left, right, ct);
         var back = CopyAsync(right, left, ct);
-        await Task.WhenAny(forward, back);
-        try { left.Close(); } catch { /* unblocks the other copy */ }
-        try { right.Close(); } catch { /* unblocks the other copy */ }
-        try { await Task.WhenAll(forward, back); } catch { /* one direction already ended */ }
+        try { await Task.WhenAll(forward, back); }
+        catch { /* one direction already ended */ }
     }
 
     private static async Task CopyAsync(NetworkStream from, NetworkStream to, CancellationToken ct)
     {
-        var buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(32768);
+        var buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(65536);
         try
         {
             while (true)
@@ -233,10 +259,11 @@ public sealed class RelayHub
         }
         catch
         {
-            // The paired direction closes both streams.
+            // The other direction finishes when this side closes its write half.
         }
         finally
         {
+            try { to.Socket.Shutdown(SocketShutdown.Send); } catch { /* already closed */ }
             System.Buffers.ArrayPool<byte>.Shared.Return(buffer);
         }
     }
