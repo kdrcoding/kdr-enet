@@ -177,6 +177,41 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         PingTone = milliseconds >= 200 ? "wrong" : "good";
     }
 
+    private bool _useRadmin;
+    private string _radminAddress = "";
+
+    public bool UseRadmin
+    {
+        get => _useRadmin;
+        set
+        {
+            if (!Set(ref _useRadmin, value))
+                return;
+            NotifyCommands();
+        }
+    }
+
+    public string RadminAddress
+    {
+        get => _radminAddress;
+        set
+        {
+            if (!Set(ref _radminAddress, value))
+                return;
+            OnPropertyChanged(nameof(RadminReadout));
+            NotifyCommands();
+        }
+    }
+
+    public string RadminReadout => string.IsNullOrEmpty(RadminAddress)
+        ? "Waiting for Radmin VPN"
+        : "tcp://" + RadminAddress + ":6801";
+
+    public bool ShowCarCode => IsCarSide && !UseRadmin;
+    public bool ShowCarRadmin => IsCarSide && UseRadmin;
+    public bool ShowTechCode => !IsCarSide && !UseRadmin;
+    public bool ShowTechRadmin => !IsCarSide && UseRadmin;
+
     public string StatusLine
     {
         get => _statusLine;
@@ -201,7 +236,9 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         set => Set(ref _versionText, value);
     }
 
-    public bool CanCopy => IsCarSide ? SessionOn && SessionLink.Digits(SessionCode).Length == 6 : true;
+    public bool CanCopy => UseRadmin
+        ? IsCarSide && SessionOn && !string.IsNullOrEmpty(RadminAddress)
+        : IsCarSide ? SessionOn && SessionLink.Digits(SessionCode).Length == 6 : true;
 
     public bool IsBusy
     {
@@ -236,7 +273,7 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         }
     }
 
-    public string StartLabel => IsBusy ? "Working…" : "Get code";
+    public string StartLabel => IsBusy ? "Working…" : UseRadmin ? "Start" : "Get code";
 
     public string JoinLabel => IsBusy ? "Working…" : "Join";
 
@@ -261,13 +298,15 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         ? "Read this code to the E-Sys laptop. Leave this window open."
         : "Click Get code. The number shows here. Read it to the E-Sys laptop.";
 
-    public string CopyLabel => IsCarSide ? "Copy code" : "Copy address";
+    public string CopyLabel => UseRadmin || !IsCarSide ? "Copy address" : "Copy code";
 
-    public bool ShowCopy => !IsCarSide || SessionLink.Digits(SessionCode).Length == 6;
+    public bool ShowCopy => UseRadmin
+        ? IsCarSide && SessionOn && !string.IsNullOrEmpty(RadminAddress)
+        : !IsCarSide || SessionLink.Digits(SessionCode).Length == 6;
 
     public bool CanStart => !IsBusy && !SessionOn && IsCarSide && !string.IsNullOrEmpty(VehicleIp);
 
-    public bool CanJoin => !IsBusy && !SessionOn && IsTechSide && RelayReady && SessionLink.Digits(CodeInput).Length == 6;
+    public bool CanJoin => !UseRadmin && !IsBusy && !SessionOn && IsTechSide && RelayReady && SessionLink.Digits(CodeInput).Length == 6;
 
     public bool CanSwitch => !IsBusy && !SessionOn;
 
@@ -320,6 +359,11 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(CanSwitch));
         OnPropertyChanged(nameof(CanCopy));
         OnPropertyChanged(nameof(IsTechSide));
+        OnPropertyChanged(nameof(ShowCarCode));
+        OnPropertyChanged(nameof(ShowCarRadmin));
+        OnPropertyChanged(nameof(ShowTechCode));
+        OnPropertyChanged(nameof(ShowTechRadmin));
+        OnPropertyChanged(nameof(RadminReadout));
         OnPropertyChanged(nameof(SideSwitchLabel));
     }
 
