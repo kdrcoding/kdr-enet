@@ -6,7 +6,7 @@ Windows 10 or 11, 64-bit. Click **Yes** when Windows asks. .NET is already insid
 
 Cables for the session: **ENET**, **MHD**, **ICOM**. K+DCAN only shows that the USB cable is in. The check at the bottom says **Missing**, **Wrong**, or **All good**.
 
-Both copies call the KDR session server. That server is not live yet, so a code cannot reach a laptop in another place until it is.
+Both copies call the KDR session server. The car laptop and the E-Sys laptop can be on different internet connections.
 
 Not affiliated with BMW. Created by Kadir · [kdrcoding.com](https://kdrcoding.com)
 
@@ -65,7 +65,7 @@ The bottom line names what is missing, what is wrong, or says **All good**.
 
 - First open: read the terms → **I agree**
 - **Awake** means the module answered. It is not a battery voltage
-- If **Get code** says the session server is not set, that code cannot reach the other laptop yet
+- **Get code** on the car laptop, then **Join** on the E-Sys laptop, then connect E-Sys
 
 KDR ENET is an independent tool for a remote BMW session. Not affiliated with BMW.
 
