@@ -15,6 +15,16 @@ One laptop stays with the car. The other laptop runs E-Sys, anywhere. They do no
 
 Both laptops run this same app. The first time, read About and click **I agree**.
 
+## Why this app
+
+**The car laptop is the bridge.** On Radmin VPN, Start listens on this laptop and passes E-Sys traffic straight to the cable. The packets do not go through the San Jose server. That is the fast path when the two laptops are closer to each other than they are to California.
+
+**Small packets are not held.** The bridge sends each E-Sys packet as soon as it arrives. Windows is not asked to wait and bundle them. That is what keeps a coding session from feeling sticky.
+
+**Windows Firewall stays on.** Start does not turn the firewall off. It allows only the diagnostic ports for this session: TCP 6801, 13400, and 50160, and UDP 6811 and 13400. The other laptop can reach the car through those ports. The rest of this computer stays closed. **Stop** removes that allow rule. Some other tools turn the whole firewall off so any inbound traffic is accepted. This app does not.
+
+**One window.** The sentence under the buttons tells you the next click. Close to the server, use the 6-digit code. Far away, use the Radmin VPN address. You do not install .NET.
+
 ## KDR server
 
 Use this when the number at the top is low, such as 50 ms.
