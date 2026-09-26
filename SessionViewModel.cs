@@ -170,12 +170,16 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         {
             PingText = "No answer";
             PingTone = "wrong";
+            OnPropertyChanged(nameof(PingIsFar));
             return;
         }
 
         PingText = milliseconds + " ms";
         PingTone = milliseconds >= 200 ? "wrong" : "good";
+        OnPropertyChanged(nameof(PingIsFar));
     }
+
+    public bool PingIsFar => PingTone == "wrong" && PingText.EndsWith(" ms", StringComparison.Ordinal);
 
     private bool _useRadmin;
     private string _radminAddress = "";
