@@ -2,44 +2,36 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 
 namespace KdrEnet;
 
 internal static class RadminLaunch
 {
+    public const string InstallFolder = @"C:\Program Files (x86)\Radmin VPN";
+    public const string Portal = "https://www.radmin-vpn.com/";
+
     public static string? ExePath()
     {
-        string[] roots =
-        {
-            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
-            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)
-        };
+        var vpn = Path.Combine(InstallFolder, "RvRvpnGui.exe");
+        if (File.Exists(vpn))
+            return vpn;
 
-        foreach (var root in roots)
-        {
-            if (string.IsNullOrEmpty(root))
-                continue;
-            var path = Path.Combine(root, "Radmin VPN", "Radmin.exe");
-            if (File.Exists(path))
-                return path;
-        }
-
-        return null;
+        var other = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Radmin VPN", "RvRvpnGui.exe");
+        return File.Exists(other) ? other : null;
     }
 
     public static bool IsRunning()
     {
         try
         {
-            return Process.GetProcessesByName("Radmin").Length > 0;
+            return Process.GetProcessesByName("RvRvpnGui").Length > 0;
         }
         catch
         {
             return false;
         }
     }
-
-    public const string Portal = "https://www.radmin-vpn.com/";
 
     public static string? VpnIp()
     {
@@ -68,21 +60,48 @@ internal static class RadminLaunch
 
     public static void Open()
     {
-        if (IsRunning())
+        var path = ExePath() ?? throw new InvalidOperationException(
+            "Radmin VPN is not in " + InstallFolder + ".");
+
+        if (ShowRunningWindow())
             return;
 
-        var path = ExePath() ?? throw new InvalidOperationException(
-            "Radmin VPN is not installed. Install it from radmin-vpn.com, then join the same network on both laptops.");
-        Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+        Process.Start(new ProcessStartInfo(path)
+        {
+            UseShellExecute = true,
+            WorkingDirectory = Path.GetDirectoryName(path)
+        });
     }
 
-    public static string Describe(bool haveAddress)
+    private static bool ShowRunningWindow()
     {
-        if (ExePath() is null)
-            return "Install Radmin VPN on both laptops and join the same network. This program passes the car through that network. It does not create the network.";
+        foreach (var process in Process.GetProcessesByName("RvRvpnGui"))
+        {
+            try
+            {
+                process.Refresh();
+                var handle = process.MainWindowHandle;
+                if (handle == IntPtr.Zero)
+                    continue;
+                ShowWindow(handle, IsIconic(handle) ? 9 : 5);
+                SetForegroundWindow(handle);
+                return true;
+            }
+            catch
+            {
+                // Try the next window.
+            }
+        }
 
-        return haveAddress
-            ? "Radmin is up on this laptop. Open Radmin on the other laptop, join this same network, and paste the copied address into E-Sys."
-            : "Open Radmin VPN here and on the other laptop, then join the same network. The address for E-Sys shows up after this laptop is in that network.";
+        return false;
     }
+
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr handle);
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindow(IntPtr handle, int command);
+
+    [DllImport("user32.dll")]
+    private static extern bool IsIconic(IntPtr handle);
 }
