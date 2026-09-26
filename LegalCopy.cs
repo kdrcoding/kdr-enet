@@ -2,7 +2,7 @@ namespace KdrEnet;
 
 public static class LegalCopy
 {
-    public const string TermsVersion = "1.3";
+    public const string TermsVersion = "1.4";
 
     public const string Summary =
         "You use this at your own risk. Kadir and KDR Coding do not pay for car damage, failed coding, or other losses, as far as the law allows. Use it only on a vehicle you are allowed to work on. Do not use it to reach a car or a computer without permission. This app is not BMW software.";
@@ -13,12 +13,12 @@ public static class LegalCopy
 
     public const string Terms = """
 KDR ENET TERMS OF USE
-Version 1.3
+Version 1.4
 
 These terms are a contract between you and Kadir, operating as KDR Coding ("KDR", "we"), for the KDR ENET software. By clicking I agree, or by starting a session, you accept them. If you do not accept them, close the app.
 
 1. What the software does
-KDR ENET is a connection helper. One computer is with the car. The other computer runs a diagnostic program you already have, such as E-Sys. The two computers are not on the same Wi-Fi. They meet through the KDR session server, or through a Radmin VPN network you install and join yourself. KDR ENET does not include E-Sys, BMW software, or Radmin VPN. It does not code the car by itself. Stop, or closing the window, ends the connection. This version does not turn Windows Firewall off. If an older session left the firewall off, Stop restores the settings from before that session.
+KDR ENET is a connection helper. One computer is with the car. The other computer runs a diagnostic program you already have, such as E-Sys. The two computers are not on the same Wi-Fi. They meet through the KDR session server, or through a Radmin VPN network you install and join yourself. KDR ENET does not include E-Sys, BMW software, or Radmin VPN. It does not code the car by itself. Stop, or closing the window, ends the connection. This version does not turn Windows Firewall off. On the Radmin VPN path, the diagnostic ports are allowed until you click Stop, and Stop removes that allow rule. If an older session left the firewall off, Stop restores the settings from before that session.
 
 2. Lawful use only
 Use KDR ENET only on a computer you are allowed to control, and only on a vehicle you own or have the owner's permission to diagnose or code. You will stay with the computer while the session is on, and you will end the session when the work is finished. You will not use the software to reach a vehicle, a computer, or a network without permission. That kind of use can be a crime, and it is not what this software is for. You are responsible for obeying the law where you are, and for any license on E-Sys, Radmin VPN, or other software you use with it.

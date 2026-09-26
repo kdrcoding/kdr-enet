@@ -21,6 +21,16 @@ public sealed class SessionLink : IDisposable
     private readonly object _clientGate = new();
     private readonly CancellationTokenSource _cancel = new();
     private int _disposed;
+    public Action<string>? OnNote { get; set; }
+    private int _noted;
+
+    private void NoteOnce(string message)
+    {
+        if (Interlocked.Exchange(ref _noted, 1) != 0)
+            return;
+        try { OnNote?.Invoke(message); }
+        catch { /* the session itself keeps running */ }
+    }
 
     public static string NewCode()
         => RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
@@ -197,9 +207,14 @@ public sealed class SessionLink : IDisposable
             await ReadOkAsync(stream, ct, TimeSpan.FromSeconds(20));
             await PumpSocketsAsync(local, relay.Client, ct);
         }
-        catch
+        catch (Exception ex)
         {
-            // E-Sys or the car side closed this one connection.
+            if (!ct.IsCancellationRequested)
+            {
+                NoteOnce(ex.Message.Contains("rejected", StringComparison.OrdinalIgnoreCase)
+                    ? "That code was rejected. Check the 6 numbers on the car laptop."
+                    : "The car laptop did not answer. Leave that window open and check the 6 numbers.");
+            }
         }
         finally
         {

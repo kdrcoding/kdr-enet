@@ -391,8 +391,15 @@ public partial class MainWindow : Window
         var text = _vm.UseRadmin
             ? "tcp://" + _vm.RadminAddress + ":6801"
             : _vm.IsCarSide ? SessionLink.Digits(_vm.SessionCode) : "tcp://127.0.0.1:6801";
-        Clipboard.SetText(text);
-        _vm.AddLog("Copied " + text + ".");
+        try
+        {
+            Clipboard.SetText(text);
+            _vm.AddLog("Copied " + text + ".");
+        }
+        catch (Exception ex)
+        {
+            _vm.AddLog("Could not copy. " + ex.Message, alert: true);
+        }
     }
 
     private void ChooseCar_Click(object sender, RoutedEventArgs e) => ChooseSide(car: true);

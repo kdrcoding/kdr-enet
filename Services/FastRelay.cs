@@ -15,7 +15,9 @@ public sealed class FastRelay : IDisposable
     public static readonly int[] UdpPorts = { 6811, 13400 };
 
     private readonly List<Socket> _listeners = new();
+    private readonly List<Socket> _live = new();
     private readonly List<Task> _loops = new();
+    private readonly object _gate = new();
     private readonly CancellationTokenSource _cancel = new();
     private int _disposed;
 
@@ -43,6 +45,14 @@ public sealed class FastRelay : IDisposable
         foreach (var socket in _listeners)
         {
             try { socket.Close(); } catch { /* unblocks accept */ }
+        }
+
+        Socket[] live;
+        lock (_gate)
+            live = _live.ToArray();
+        foreach (var socket in live)
+        {
+            try { socket.Close(); } catch { /* unblocks the copy */ }
         }
 
         try { Task.WaitAll(_loops.ToArray(), TimeSpan.FromSeconds(2)); }
@@ -89,7 +99,7 @@ public sealed class FastRelay : IDisposable
         _loops.Add(Task.Run(() => UdpLoop(listen, vehicle, port, token)));
     }
 
-    private static async Task AcceptLoop(Socket listen, IPAddress vehicle, int targetPort, CancellationToken token)
+    private async Task AcceptLoop(Socket listen, IPAddress vehicle, int targetPort, CancellationToken token)
     {
         while (!token.IsCancellationRequested)
         {
@@ -108,10 +118,12 @@ public sealed class FastRelay : IDisposable
         }
     }
 
-    private static async Task PumpAsync(Socket incoming, IPAddress vehicle, int targetPort)
+    private async Task PumpAsync(Socket incoming, IPAddress vehicle, int targetPort)
     {
         using var remote = incoming;
         using var car = NewTcpSocket();
+        Track(remote);
+        Track(car);
         try
         {
             using var connectCancel = new CancellationTokenSource(TimeSpan.FromSeconds(8));
@@ -124,6 +136,23 @@ public sealed class FastRelay : IDisposable
         {
             // The car side or the other laptop closed. Drop this one connection only.
         }
+        finally
+        {
+            Forget(remote);
+            Forget(car);
+        }
+    }
+
+    private void Track(Socket socket)
+    {
+        lock (_gate)
+            _live.Add(socket);
+    }
+
+    private void Forget(Socket socket)
+    {
+        lock (_gate)
+            _live.Remove(socket);
     }
 
     private static async Task PipeAsync(Socket from, Socket to)
