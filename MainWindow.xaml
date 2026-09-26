@@ -297,7 +297,7 @@
                             <Setter Property="Foreground" Value="#8ea0b5"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding LinkTone}" Value="good">
-                                    <Setter Property="Foreground" Value="#f4f7fb"/>
+                                    <Setter Property="Foreground" Value="#3DDC84"/>
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding LinkTone}" Value="wrong">
                                     <Setter Property="Foreground" Value="#e8b15a"/>
@@ -340,6 +340,9 @@
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding CheckTone}" Value="good">
                                 <Setter Property="Foreground" Value="#f4f7fb"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding CheckTone}" Value="live">
+                                <Setter Property="Foreground" Value="#3DDC84"/>
                             </DataTrigger>
                             <DataTrigger Binding="{Binding CheckTone}" Value="wrong">
                                 <Setter Property="Foreground" Value="#e8b15a"/>

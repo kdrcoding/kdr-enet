@@ -48,6 +48,14 @@ public partial class MainWindow : Window
             _vm.PeerLive = true;
             SetNextStep(_lastScan);
         }));
+        _session.OnQuiet = () => Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (_shutdown)
+                return;
+            _vm.PeerLive = false;
+            _vm.PeerFrom = "";
+            SetNextStep(_lastScan);
+        }));
         _session.OnClient = ip => Dispatcher.BeginInvoke(new Action(() =>
         {
             if (_shutdown || string.IsNullOrWhiteSpace(ip))
@@ -998,13 +1006,22 @@ public partial class MainWindow : Window
         {
             if (_vm.UseRadmin)
             {
-                Mark("good", _vm.IsCarSide
-                    ? (string.IsNullOrEmpty(_vm.RadminAddress)
-                        ? "Not connected. Join the same network in Radmin VPN."
-                        : (string.IsNullOrEmpty(_vm.PeerFrom)
-                            ? "Not connected. Copy the address. Nobody has reached this laptop yet."
-                            : "Connected from " + _vm.PeerFrom + "."))
-                    : "Not connected. Paste the car laptop address into E-Sys.");
+                if (!_vm.IsCarSide)
+                {
+                    Mark("wrong", "Not connected. Paste the car laptop address into E-Sys.");
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(_vm.RadminAddress))
+                {
+                    Mark("wrong", "Not connected. Join the same network in Radmin VPN.");
+                    return;
+                }
+
+                Mark(string.IsNullOrEmpty(_vm.PeerFrom) ? "wrong" : "live",
+                    string.IsNullOrEmpty(_vm.PeerFrom)
+                        ? "Not connected. Copy the address. Nobody has reached this laptop yet."
+                        : "Connected from " + _vm.PeerFrom + ".");
                 return;
             }
 
@@ -1014,13 +1031,18 @@ public partial class MainWindow : Window
                 return;
             }
 
-            Mark("good", _vm.IsCarSide
-                ? (_vm.PeerLive
-                    ? (string.IsNullOrEmpty(_vm.PeerFrom)
-                        ? "Connected. Someone joined this code."
-                        : "Connected from " + _vm.PeerFrom + ".")
-                    : "Not connected. Read the code. Nobody has joined yet.")
-                : "Connected. Put tcp://127.0.0.1:6801 in E-Sys.");
+            if (_vm.IsCarSide)
+            {
+                Mark(_vm.PeerLive ? "live" : "wrong",
+                    _vm.PeerLive
+                        ? (string.IsNullOrEmpty(_vm.PeerFrom)
+                            ? "Connected. Someone joined this code."
+                            : "Connected from " + _vm.PeerFrom + ".")
+                        : "Not connected. Read the code. Nobody has joined yet.");
+                return;
+            }
+
+            Mark("live", "Connected. Put tcp://127.0.0.1:6801 in E-Sys.");
             return;
         }
 

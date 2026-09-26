@@ -258,8 +258,8 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         }
     }
 
-    public bool ShowVin => IsCarSide && VinLine.Length > 0;
-    public bool ShowCarFacts => IsCarSide && CarFactsLine.Length > 0;
+    public bool ShowVin => IsCarSide && !SessionOn && VinLine.Length > 0;
+    public bool ShowCarFacts => IsCarSide && !SessionOn && CarFactsLine.Length > 0;
 
     private string _versionLine = "";
 
@@ -274,7 +274,7 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         }
     }
 
-    public bool ShowVersion => IsCarSide && VersionLine.Length > 0;
+    public bool ShowVersion => IsCarSide && !SessionOn && VersionLine.Length > 0;
 
     public string PeerFrom { get; set; } = "";
 

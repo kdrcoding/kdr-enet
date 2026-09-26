@@ -23,8 +23,10 @@ public sealed class SessionLink : IDisposable
     private int _disposed;
     public Action<string>? OnNote { get; set; }
     public Action? OnLive { get; set; }
+    public Action? OnQuiet { get; set; }
+    private readonly object _liveGate = new();
     private int _noted;
-    private int _live;
+    private int _liveCount;
 
     private void NoteOnce(string message)
     {
@@ -34,14 +36,24 @@ public sealed class SessionLink : IDisposable
         catch { /* the session itself keeps running */ }
     }
 
-    private void MarkLive(int port)
+    private void NotePeer(int port, bool joined)
     {
         if (port != 6801)
             return;
-        if (Interlocked.Exchange(ref _live, 1) != 0)
-            return;
-        try { OnLive?.Invoke(); }
-        catch { /* the session itself keeps running */ }
+        lock (_liveGate)
+        {
+            _liveCount += joined ? 1 : -1;
+            if (_liveCount < 0)
+                _liveCount = 0;
+            try
+            {
+                if (_liveCount > 0)
+                    OnLive?.Invoke();
+                else
+                    OnQuiet?.Invoke();
+            }
+            catch { /* the session itself keeps running */ }
+        }
     }
 
     public static async Task<bool> IdentifyAsync(string code, string host, int port, CancellationToken ct = default)
@@ -221,18 +233,26 @@ public sealed class SessionLink : IDisposable
                 var stream = relay.GetStream();
                 await WriteHelloAsync(stream, 'C', code, port, 'T', ct);
                 await ReadOkAsync(stream, ct, Timeout.InfiniteTimeSpan);
-                MarkLive(port);
                 var car = NewTcpSocket();
                 var held = relay;
                 relay = null;
                 _ = Task.Run(async () =>
                 {
+                    var joined = false;
                     try
                     {
                         using var connectBudget = CancellationTokenSource.CreateLinkedTokenSource(ct);
                         connectBudget.CancelAfter(TimeSpan.FromSeconds(8));
                         await car.ConnectAsync(new IPEndPoint(vehicle, port), connectBudget.Token);
-                        await PumpSocketsAsync(held.Client, car, ct);
+                        var pump = PumpSocketsAsync(held.Client, car, ct);
+                        var done = await Task.WhenAny(pump, Task.Delay(400, ct));
+                        if (done != pump && !ct.IsCancellationRequested)
+                        {
+                            NotePeer(port, true);
+                            joined = true;
+                        }
+
+                        await pump;
                     }
                     catch
                     {
@@ -240,6 +260,8 @@ public sealed class SessionLink : IDisposable
                     }
                     finally
                     {
+                        if (joined)
+                            NotePeer(port, false);
                         try { car.Close(); } catch { /* already closed */ }
                         Close(held);
                     }
@@ -281,13 +303,15 @@ public sealed class SessionLink : IDisposable
     {
         using var local = incoming;
         TcpClient? relay = null;
+        var joined = false;
         try
         {
             relay = await DialAsync(host, relayPort, ct);
             var stream = relay.GetStream();
             await WriteHelloAsync(stream, 'T', code, port, 'T', ct);
             await ReadOkAsync(stream, ct, TimeSpan.FromSeconds(20));
-            MarkLive(port);
+            NotePeer(port, true);
+            joined = true;
             await PumpSocketsAsync(local, relay.Client, ct);
         }
         catch (Exception ex)
@@ -301,6 +325,8 @@ public sealed class SessionLink : IDisposable
         }
         finally
         {
+            if (joined)
+                NotePeer(port, false);
             Close(relay);
         }
     }
