@@ -189,8 +189,8 @@ public sealed class SessionViewModel : INotifyPropertyChanged
             ? "This laptop stays with the car. Open Radmin VPN, join the same network, then click Start."
             : "This laptop runs E-Sys. Open Radmin VPN, join the same network, and paste the car laptop address into E-Sys.")
         : (IsCarSide
-            ? "This laptop stays with the car. Click Get code, then read the 6 numbers to the other person."
-            : "This laptop runs E-Sys. Type the 6 numbers, click Join, then use the address shown here.");
+            ? "This laptop stays with the car. Click Get code. New code replaces it. Read the 6 numbers out."
+            : "This laptop runs E-Sys. Type the 6 numbers and click Join. It checks the code before it connects.");
 
     private bool _useRadmin;
     private string _radminAddress = "";
@@ -290,6 +290,10 @@ public sealed class SessionViewModel : INotifyPropertyChanged
 
     public string StartLabel => IsBusy ? "Working…" : UseRadmin ? "Start" : "Get code";
 
+    public string NewCodeLabel => IsBusy ? "Working…" : "New code";
+
+    public bool CanNewCode => IsCarSide && !UseRadmin && !IsBusy && SessionOn && !string.IsNullOrEmpty(VehicleIp);
+
     public string JoinLabel => IsBusy ? "Working…" : "Join";
 
     public string CheckLabel => IsBusy ? "Identifying…" : "Check code";
@@ -375,6 +379,7 @@ public sealed class SessionViewModel : INotifyPropertyChanged
     public void NotifyCommands()
     {
         OnPropertyChanged(nameof(StartLabel));
+        OnPropertyChanged(nameof(NewCodeLabel));
         OnPropertyChanged(nameof(JoinLabel));
         OnPropertyChanged(nameof(CheckLabel));
         OnPropertyChanged(nameof(DisplayCode));
@@ -389,6 +394,7 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(CopyLabel));
         OnPropertyChanged(nameof(ShowCopy));
         OnPropertyChanged(nameof(CanStart));
+        OnPropertyChanged(nameof(CanNewCode));
         OnPropertyChanged(nameof(CanJoin));
         OnPropertyChanged(nameof(CanCheck));
         OnPropertyChanged(nameof(CanStop));

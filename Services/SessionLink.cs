@@ -62,6 +62,43 @@ public sealed class SessionLink : IDisposable
         }
     }
 
+    /// <summary>
+    /// Closes a code that was already stopped. The session server keeps a stopped
+    /// wait until something matches it once, so New code clears each port first.
+    /// </summary>
+    public static async Task RetireAsync(string code, string host, int relayPort, CancellationToken ct = default)
+    {
+        var digits = RequireCode(code);
+        foreach (var port in FastRelay.TcpPorts)
+            await ConsumeOnceAsync(digits, port, 'T', host, relayPort, ct);
+        foreach (var port in FastRelay.UdpPorts)
+            await ConsumeOnceAsync(digits, port, 'U', host, relayPort, ct);
+    }
+
+    private static async Task ConsumeOnceAsync(string digits, int listenPort, char kind, string host, int relayPort, CancellationToken ct)
+    {
+        try
+        {
+            using var client = new TcpClient();
+            Tune(client.Client);
+            using (var connect = CancellationTokenSource.CreateLinkedTokenSource(ct))
+            {
+                connect.CancelAfter(TimeSpan.FromSeconds(4));
+                await client.ConnectAsync(host, relayPort, connect.Token);
+            }
+
+            var stream = client.GetStream();
+            await WriteHelloAsync(stream, 'T', digits, listenPort, kind, ct);
+            using var wait = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            wait.CancelAfter(TimeSpan.FromSeconds(1));
+            await ReadLineAsync(stream, 16, wait.Token);
+        }
+        catch
+        {
+            // That port was already gone, or the server did not answer.
+        }
+    }
+
     public static string NewCode()
         => RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
 

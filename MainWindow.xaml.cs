@@ -150,23 +150,7 @@ public partial class MainWindow : Window
             }
 
             var code = SessionLink.NewCode();
-            if (!_vm.RelayReady)
-            {
-                _vm.LastLineAlert = false;
-                _vm.SessionCode = SessionLink.FormatCode(code);
-                _vm.SessionOn = true;
-                _vm.AddLog("Code " + SessionLink.Digits(code) + " stays on this laptop. The other laptop cannot join until the session server is set.");
-                return;
-            }
-
-            var progress = new Progress<string>(message => _vm.AddLog(message));
-            await _session.StartLinkAsync(code, _vm.VehicleIp, carSide: true, progress);
-            _vm.LastLineAlert = false;
-            _vm.SessionCode = SessionLink.FormatCode(code);
-            _vm.SessionOn = true;
-            _vm.Session.Detail = _vm.SessionCode;
-            _vm.Session.State = "ok";
-            _vm.AddLog("Leave this window open. The other person types " + _vm.SessionCode + ".");
+            await BeginCarCodeAsync(code, replacing: false);
         }
         catch (Exception ex)
         {
@@ -182,6 +166,64 @@ public partial class MainWindow : Window
             if (!_shutdown)
                 _timer.Start();
         }
+    }
+
+    private async void NewCode_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_vm.CanNewCode || !EnsureAccepted() || string.IsNullOrEmpty(_vm.VehicleIp))
+            return;
+
+        _timer.Stop();
+        _vm.IsBusy = true;
+        try
+        {
+            var previous = SessionLink.Digits(_vm.SessionCode);
+            await _session.StopAsync();
+            _vm.SessionOn = false;
+            _vm.SessionCode = "—";
+            if (previous.Length == 6 && RelaySettings.TryGet(out var host, out var port))
+                await SessionLink.RetireAsync(previous, host, port);
+            var code = SessionLink.NewCode();
+            await BeginCarCodeAsync(code, replacing: true);
+        }
+        catch (Exception ex)
+        {
+            ExplainFailure(ex);
+            try { await _session.StopAsync(); } catch { /* best effort rollback */ }
+            _vm.SessionOn = false;
+            _vm.Session.Detail = "Off";
+            _vm.Session.State = "wait";
+            _vm.SessionCode = "—";
+        }
+        finally
+        {
+            _vm.IsBusy = false;
+            if (!_shutdown)
+                _timer.Start();
+        }
+    }
+
+    private async Task BeginCarCodeAsync(string code, bool replacing)
+    {
+        if (!_vm.RelayReady)
+        {
+            _vm.LastLineAlert = false;
+            _vm.SessionCode = SessionLink.FormatCode(code);
+            _vm.SessionOn = true;
+            _vm.AddLog("Code " + SessionLink.Digits(code) + " stays on this laptop. The other laptop cannot join until the session server is set.");
+            return;
+        }
+
+        var progress = new Progress<string>(message => _vm.AddLog(message));
+        await _session.StartLinkAsync(code, _vm.VehicleIp, carSide: true, progress);
+        _vm.LastLineAlert = false;
+        _vm.SessionCode = SessionLink.FormatCode(code);
+        _vm.SessionOn = true;
+        _vm.Session.Detail = _vm.SessionCode;
+        _vm.Session.State = "ok";
+        _vm.AddLog(replacing
+            ? "New code " + _vm.SessionCode + " is set. The old code is finished."
+            : "Leave this window open. The other person types " + _vm.SessionCode + ".");
     }
 
     private async void Stop_Click(object sender, RoutedEventArgs e)
@@ -348,6 +390,22 @@ public partial class MainWindow : Window
         _vm.IsBusy = true;
         try
         {
+            if (RelaySettings.TryGet(out var host, out var port))
+            {
+                Mark("missing", "Loading. Identifying the code.");
+                var found = await SessionLink.IdentifyAsync(digits, host, port);
+                if (!found)
+                {
+                    _vm.IdentifyTone = "wrong";
+                    _vm.IdentifyText = "Not found. No car laptop is waiting on that code.";
+                    SetNextStep(_lastScan);
+                    return;
+                }
+
+                _vm.IdentifyText = "";
+                Mark("good", "Found. Joining that code.");
+            }
+
             var progress = new Progress<string>(message => _vm.AddLog(message));
             await _session.StartLinkAsync(digits, vehicleIp: null, carSide: false, progress);
             _vm.LastLineAlert = false;
