@@ -76,7 +76,7 @@ public sealed class SessionService
             return new ScanResult
             {
                 CableState = "wait",
-                CableDetail = driver is null ? "Not connected" : "Driver missing",
+                CableDetail = driver is null ? "Cable missing" : "Driver missing",
                 PowerState = "wait",
                 PowerDetail = "Waiting",
                 VehicleState = "wait",
@@ -203,7 +203,7 @@ public sealed class SessionService
             return new ScanResult
             {
                 CableState = "wait",
-                CableDetail = driver is null ? "Not connected" : "Driver missing",
+                CableDetail = driver is null ? "Cable missing" : "Driver missing",
                 PowerState = "wait",
                 PowerDetail = "Waiting",
                 VehicleState = "wait",
