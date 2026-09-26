@@ -13,12 +13,13 @@ public partial class MainWindow : Window
     private readonly SessionViewModel _vm = new();
     private readonly SessionService _session = new();
     private readonly DispatcherTimer _timer;
+    private readonly DispatcherTimer _pingTimer;
     private int _scanGate;
     private string _signature = "";
     private ScanResult? _lastScan;
     private string? _heldVehicleIp;
     private int _quietScans;
-    private int _pingTick;
+    private int _pingGate;
     private bool _pathLocked;
     private bool _sideChosen;
     private bool _shutdown;
@@ -32,12 +33,9 @@ public partial class MainWindow : Window
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         _vm.VersionText = version is null ? "1.0" : version.Major + "." + version.Minor;
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(4) };
-        _timer.Tick += async (_, _) =>
-        {
-            await ScanAsync(probe: _lastScan?.CableState == "ok");
-            if (++_pingTick % 3 == 0)
-                QueuePing();
-        };
+        _timer.Tick += async (_, _) => await ScanAsync(probe: _lastScan?.CableState == "ok");
+        _pingTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(4) };
+        _pingTimer.Tick += (_, _) => QueuePing();
         Loaded += OnLoaded;
         Closing += OnClosing;
         _vm.PropertyChanged += (_, args) =>
@@ -87,6 +85,7 @@ public partial class MainWindow : Window
         PaintPaths();
         QueuePing();
         _timer.Start();
+        _pingTimer.Start();
     }
 
     private async void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -106,6 +105,7 @@ public partial class MainWindow : Window
 
         _closeWarned = false;
         _timer.Stop();
+        _pingTimer.Stop();
         if (!_vm.SessionOn && !FirewallControl.HasSavedState())
             return;
 
@@ -267,11 +267,20 @@ public partial class MainWindow : Window
             return;
         var index = SlotIndex(box);
         var slots = Slots();
-        if (e.Key == Key.Back && box.Text.Length == 0 && index > 0)
+        if (e.Key is Key.Back or Key.Delete)
         {
-            slots[index - 1].Text = "";
-            slots[index - 1].Focus();
             e.Handled = true;
+            if (box.Text.Length > 0)
+            {
+                box.Text = "";
+                return;
+            }
+
+            if (e.Key == Key.Back && index > 0)
+            {
+                slots[index - 1].Text = "";
+                slots[index - 1].Focus();
+            }
         }
         else if (e.Key == Key.Left && index > 0)
         {
@@ -522,21 +531,35 @@ public partial class MainWindow : Window
 
     private void QueuePing()
     {
+        if (_shutdown || _vm.IsBusy)
+            return;
         if (!RelaySettings.TryGet(out var host, out var port))
         {
             _vm.NotePing(null, _pathLocked);
             return;
         }
 
+        if (Interlocked.Exchange(ref _pingGate, 1) == 1)
+            return;
+
         _ = Task.Run(() =>
         {
-            var milliseconds = SessionLink.MeasureMilliseconds(host, port);
-            Dispatcher.Invoke(() =>
+            try
             {
-                _vm.NotePing(milliseconds, _pathLocked);
-                RefreshRadminAddress();
-                PaintPaths();
-            });
+                var milliseconds = SessionLink.MeasureMilliseconds(host, port);
+                Dispatcher.Invoke(() =>
+                {
+                    if (_shutdown)
+                        return;
+                    _vm.NotePing(milliseconds, _pathLocked);
+                    RefreshRadminAddress();
+                    PaintPaths();
+                });
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _pingGate, 0);
+            }
         });
     }
 
