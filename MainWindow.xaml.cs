@@ -20,6 +20,7 @@ public partial class MainWindow : Window
     private string? _heldVehicleIp;
     private int _quietScans;
     private int _pingGate;
+    private bool _pathLocked;
     private bool _sideChosen;
     private bool _shutdown;
     private bool _closeWarned;
@@ -437,6 +438,7 @@ public partial class MainWindow : Window
     {
         if (!_vm.CanSwitch || !_vm.UseRadmin)
             return;
+        _pathLocked = true;
         _vm.UseRadmin = false;
         PaintPaths();
         SetNextStep(_lastScan);
@@ -446,6 +448,7 @@ public partial class MainWindow : Window
     {
         if (!_vm.CanSwitch || _vm.UseRadmin)
             return;
+        _pathLocked = true;
         _vm.UseRadmin = true;
         RefreshRadminAddress();
         PaintPaths();
@@ -553,6 +556,13 @@ public partial class MainWindow : Window
                     if (_shutdown)
                         return;
                     _vm.NotePing(milliseconds);
+                    if (_vm.PingIsFar && !_pathLocked && !_vm.SessionOn)
+                    {
+                        _vm.UseRadmin = true;
+                        RefreshRadminAddress();
+                    }
+                    PaintPaths();
+                    SetNextStep(_lastScan);
                 });
             }
             finally

@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:KdrEnet"
         Title="KDR ENET"
         Width="520"
-        Height="640"
+        Height="680"
         MinWidth="440"
         MinHeight="460"
         ResizeMode="CanResize"
@@ -187,6 +187,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -218,6 +219,9 @@
                         </Style>
                     </TextBlock.Style>
                 </TextBlock>
+                <TextBlock Text="Server is far. Use the Open Radmin VPN button, join the same network, then Start on the car laptop."
+                           FontSize="13" Foreground="#e8b15a" TextWrapping="Wrap" Margin="0,6,0,0"
+                           Visibility="{Binding PingIsFar, Converter={StaticResource BoolVis}}"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
                 <Button Content="Settings" Style="{StaticResource ChoiceButton}" Margin="0,0,8,0" Click="Settings_Click"/>
@@ -230,15 +234,17 @@
             <Button x:Name="RadminPathButton" Content="Radmin VPN" Style="{StaticResource ChoiceButton}" Click="ChooseRadmin_Click"/>
         </UniformGrid>
 
-        <UniformGrid Grid.Row="2" Columns="2" Margin="0,0,0,16">
+        <Button Grid.Row="2" Content="Open Radmin VPN" Style="{StaticResource ChoiceButton}" HorizontalAlignment="Stretch" Margin="0,0,0,10" Click="Radmin_Click"/>
+
+        <UniformGrid Grid.Row="3" Columns="2" Margin="0,0,0,16">
             <Button x:Name="CarRoleButton" Content="Car laptop" Style="{StaticResource ChoiceButton}" Margin="0,0,8,0" Click="ChooseCar_Click"/>
             <Button x:Name="EsyRoleButton" Content="E-Sys laptop" Style="{StaticResource ChoiceButton}" Click="ChooseEsy_Click"/>
         </UniformGrid>
 
-        <TextBlock Grid.Row="3" Text="{Binding StatusLine}" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,8"
+        <TextBlock Grid.Row="4" Text="{Binding StatusLine}" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,8"
                    Visibility="{Binding IsCarSide, Converter={StaticResource BoolVis}}"/>
 
-        <StackPanel Grid.Row="4" VerticalAlignment="Center">
+        <StackPanel Grid.Row="5" VerticalAlignment="Center">
             <StackPanel Visibility="{Binding ShowCarCode, Converter={StaticResource BoolVis}}">
                 <TextBlock Text="Read this out" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,10"/>
                 <StackPanel Orientation="Horizontal">
@@ -275,7 +281,7 @@
             </StackPanel>
         </StackPanel>
 
-        <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,8,0,14">
+        <StackPanel Grid.Row="6" Orientation="Horizontal" Margin="0,8,0,14">
             <Button Content="{Binding StartLabel}" Style="{StaticResource PrimaryButton}" MinWidth="108" Margin="0,0,8,0" Click="Start_Click" IsEnabled="{Binding CanStart}"
                     Visibility="{Binding IsCarSide, Converter={StaticResource BoolVis}}"/>
             <Button Content="{Binding JoinLabel}" Style="{StaticResource PrimaryButton}" MinWidth="108" Margin="0,0,8,0" Click="Join_Click" IsEnabled="{Binding CanJoin}"
@@ -286,7 +292,7 @@
                     Visibility="{Binding CanStop, Converter={StaticResource BoolVis}}"/>
         </StackPanel>
 
-        <StackPanel Grid.Row="6">
+        <StackPanel Grid.Row="7">
             <TextBlock Text="{Binding CheckWord}" FontSize="13" TextWrapping="Wrap">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
@@ -302,8 +308,6 @@
                     </Style>
                 </TextBlock.Style>
             </TextBlock>
-            <Button Content="Open Radmin VPN" Style="{StaticResource GhostButton}" HorizontalAlignment="Left" Margin="0,8,0,0"
-                    Click="Radmin_Click" Visibility="{Binding UseRadmin, Converter={StaticResource BoolVis}}"/>
             <Button Content="Open driver page" Style="{StaticResource GhostButton}" HorizontalAlignment="Left" Margin="0,8,0,0"
                     Click="Driver_Click" Visibility="{Binding ShowDriver, Converter={StaticResource BoolVis}}"/>
             <TextBlock Text="{Binding LastLine}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0" Foreground="#e8b15a"
