@@ -237,7 +237,8 @@
             </UniformGrid>
         </StackPanel>
 
-        <Button Grid.Row="2" Content="Open Radmin VPN" Style="{StaticResource ChoiceButton}" HorizontalAlignment="Stretch" Margin="0,0,0,14" Click="Radmin_Click"/>
+        <Button Grid.Row="2" Content="Open Radmin VPN" Style="{StaticResource ChoiceButton}" HorizontalAlignment="Stretch" Margin="0,0,0,14" Click="Radmin_Click"
+                Visibility="{Binding ShowOpenRadmin, Converter={StaticResource BoolVis}}"/>
 
         <StackPanel Grid.Row="3" Margin="0,0,0,12">
             <TextBlock Text="2. Which laptop is this" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,6"/>
@@ -245,7 +246,6 @@
                 <Button x:Name="CarRoleButton" Content="Car laptop" Style="{StaticResource ChoiceButton}" Margin="0,0,8,0" Click="ChooseCar_Click"/>
                 <Button x:Name="EsyRoleButton" Content="E-Sys laptop" Style="{StaticResource ChoiceButton}" Click="ChooseEsy_Click"/>
             </UniformGrid>
-            <TextBlock Text="{Binding GuideLine}" FontSize="14" Foreground="#f4f7fb" TextWrapping="Wrap" Margin="0,12,0,0"/>
         </StackPanel>
 
         <StackPanel Grid.Row="4" Margin="0,0,0,8">
@@ -333,7 +333,8 @@
         </StackPanel>
 
         <StackPanel Grid.Row="7">
-            <TextBlock Text="{Binding CheckWord}" FontSize="13" TextWrapping="Wrap">
+            <TextBlock Text="{Binding CheckWord}" FontSize="13" TextWrapping="Wrap"
+                       Visibility="{Binding ShowCheck, Converter={StaticResource BoolVis}}">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Foreground" Value="#b7c3d1"/>

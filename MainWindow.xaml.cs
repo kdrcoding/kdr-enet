@@ -943,8 +943,8 @@ public partial class MainWindow : Window
 
             _vm.LinkState = string.IsNullOrEmpty(_vm.PeerFrom) ? "Not connected" : "Connected from " + _vm.PeerFrom;
             _vm.LinkTone = string.IsNullOrEmpty(_vm.PeerFrom) ? "wrong" : "good";
-            _vm.LinkHint = "Put this in E-Sys on the other laptop";
-            _vm.LinkAddress = "tcp://" + _vm.RadminAddress + ":6801";
+            _vm.LinkHint = "";
+            _vm.LinkAddress = "";
             _vm.LinkDetail = CarBlock();
             return;
         }
@@ -1007,6 +1007,13 @@ public partial class MainWindow : Window
         _vm.CheckTone = tone;
         _vm.CheckWord = sentence;
         _vm.NextDetail = sentence;
+    }
+
+    private void ClearStatus()
+    {
+        _vm.CheckTone = "missing";
+        _vm.CheckWord = "";
+        _vm.NextDetail = "";
     }
 
     private async Task LookForUpdateAsync()
@@ -1090,45 +1097,19 @@ public partial class MainWindow : Window
 
         if (_vm.SessionOn)
         {
-            if (_vm.UseRadmin)
+            if (_vm.UseRadmin && _vm.IsCarSide && string.IsNullOrEmpty(_vm.RadminAddress))
             {
-                if (!_vm.IsCarSide)
-                {
-                    Mark("wrong", "Not connected. Paste the car laptop address into E-Sys.");
-                    return;
-                }
-
-                if (string.IsNullOrEmpty(_vm.RadminAddress))
-                {
-                    Mark("wrong", "Not connected. Join the same network in Radmin VPN.");
-                    return;
-                }
-
-                Mark(string.IsNullOrEmpty(_vm.PeerFrom) ? "wrong" : "live",
-                    string.IsNullOrEmpty(_vm.PeerFrom)
-                        ? "Not connected. Copy the address. Nobody has reached this laptop yet."
-                        : "Connected from " + _vm.PeerFrom + ".");
+                Mark("wrong", "Not connected. Join the same network in Radmin VPN.");
                 return;
             }
 
-            if (_vm.IsCarSide && !_vm.RelayReady)
+            if (_vm.IsCarSide && !_vm.UseRadmin && !_vm.RelayReady)
             {
-                Mark("good", "All good. This code stays until you click Stop. The other laptop cannot join until the session server is set.");
+                Mark("wrong", "The session server is missing, so the other laptop cannot join.");
                 return;
             }
 
-            if (_vm.IsCarSide)
-            {
-                Mark(_vm.PeerLive ? "live" : "wrong",
-                    _vm.PeerLive
-                        ? (string.IsNullOrEmpty(_vm.PeerFrom)
-                            ? "Connected. Someone joined this code."
-                            : "Connected from " + _vm.PeerFrom + ".")
-                        : "Not connected. Read the code. Nobody has joined yet.");
-                return;
-            }
-
-            Mark("live", "Connected. Put tcp://127.0.0.1:6801 in E-Sys.");
+            ClearStatus();
             return;
         }
 
@@ -1136,7 +1117,7 @@ public partial class MainWindow : Window
         {
             if (_vm.UseRadmin)
             {
-                Mark("good", "Join the same Radmin VPN network as the car laptop. Paste that address into E-Sys.");
+                ClearStatus();
                 return;
             }
 
@@ -1152,10 +1133,13 @@ public partial class MainWindow : Window
                 return;
             }
 
-            Mark(_vm.RelayReady ? "missing" : "missing",
-                _vm.RelayReady
-                    ? "Not connected. Click Join. The address for E-Sys shows here after that."
-                    : "Not connected. The session server is missing, so Join stays off.");
+            if (!_vm.RelayReady)
+            {
+                Mark("wrong", "The session server is missing, so Join stays off.");
+                return;
+            }
+
+            ClearStatus();
             return;
         }
 
@@ -1186,24 +1170,18 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (_vm.UseRadmin)
+        if (_vm.UseRadmin && string.IsNullOrEmpty(_vm.RadminAddress))
         {
-            Mark("good", string.IsNullOrEmpty(_vm.RadminAddress)
-                ? "All good. The car is awake. Click Start."
-                : "All good. Click Start. The other laptop uses tcp://" + _vm.RadminAddress + ":6801.");
+            Mark("wrong", "Not connected. Join the same network in Radmin VPN.");
             return;
         }
 
-        if (!_vm.RelayReady)
+        if (!_vm.RelayReady && !_vm.UseRadmin && SessionLink.Digits(_vm.SessionCode).Length == 6)
         {
-            Mark("good", SessionLink.Digits(_vm.SessionCode).Length == 6
-                ? "All good. Read the code above out loud. The other laptop cannot join until the session server is set."
-                : "All good. The car is awake. Click Get code.");
+            Mark("wrong", "The session server is missing, so the other laptop cannot join.");
             return;
         }
 
-        Mark("good", SessionLink.Digits(_vm.SessionCode).Length == 6
-            ? "All good. Read the code above to the other laptop."
-            : "All good. Click Get code, then read it to the other laptop.");
+        ClearStatus();
     }
 }

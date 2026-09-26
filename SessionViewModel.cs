@@ -143,7 +143,12 @@ public sealed class SessionViewModel : INotifyPropertyChanged
     public string CheckWord
     {
         get => _checkWord;
-        set => Set(ref _checkWord, value);
+        set
+        {
+            if (!Set(ref _checkWord, value))
+                return;
+            OnPropertyChanged(nameof(ShowCheck));
+        }
     }
 
     public string CheckTone
@@ -151,6 +156,8 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         get => _checkTone;
         set => Set(ref _checkTone, value);
     }
+
+    public bool ShowCheck => CheckWord.Length > 0;
 
     private string _pingText = "Measuring the server…";
     private string _pingTone = "missing";
@@ -174,23 +181,19 @@ public sealed class SessionViewModel : INotifyPropertyChanged
             PingText = "The server did not answer";
             PingTone = "wrong";
             OnPropertyChanged(nameof(PingIsFar));
+            OnPropertyChanged(nameof(ShowOpenRadmin));
             return;
         }
 
         PingText = milliseconds + " ms to the server";
         PingTone = milliseconds >= 200 ? "wrong" : "good";
         OnPropertyChanged(nameof(PingIsFar));
+        OnPropertyChanged(nameof(ShowOpenRadmin));
     }
 
     public bool PingIsFar => PingTone == "wrong" && PingText.Contains(" ms", StringComparison.Ordinal);
 
-    public string GuideLine => UseRadmin
-        ? (IsCarSide
-            ? "This laptop stays with the car. Open Radmin VPN, join the same network, then click Start."
-            : "This laptop runs E-Sys. Open Radmin VPN, join the same network, and paste the car laptop address into E-Sys.")
-        : (IsCarSide
-            ? "This laptop stays with the car. Click Get code. New code replaces it. Read the 6 numbers out."
-            : "This laptop runs E-Sys. Type the 6 numbers and click Join. It checks the code before it connects.");
+    public bool ShowOpenRadmin => UseRadmin || PingIsFar;
 
     private bool _useRadmin;
     private string _radminAddress = "";
@@ -513,7 +516,7 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(ShowRadminCopy));
         OnPropertyChanged(nameof(RadminReadout));
         OnPropertyChanged(nameof(SideSwitchLabel));
-        OnPropertyChanged(nameof(GuideLine));
+        OnPropertyChanged(nameof(ShowOpenRadmin));
     }
 
     private bool Set<T>(ref T field, T value, [CallerMemberName] string? name = null)
