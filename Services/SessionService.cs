@@ -111,13 +111,13 @@ public sealed class SessionService
                 var found = VehicleReader.Read(enet.LocalIp, arpIp, TimeSpan.FromMilliseconds(800));
                 if (found is VehicleReader.Found hit)
                 {
-                    if (hit.Ip is not null)
+                    if (arpIp is null && hit.Ip is not null)
                         vehicleIp = hit.Ip;
-                    if (hit.Vin.Length == 17)
+                    if (hit.Vin.Length == 17 && VehicleReader.PassesCheckDigit(hit.Vin))
                     {
                         vin = hit.Vin;
                         _vin = hit.Vin;
-                        _vinForIp = hit.Ip ?? arpIp;
+                        _vinForIp = arpIp ?? hit.Ip;
                     }
                 }
             }

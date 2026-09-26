@@ -40,7 +40,10 @@ public static class VehicleLookup
         if (vinYear is int expected && year != expected)
             return null;
 
+        var localMake = VehicleReader.Describe(vin).Make;
         var make = Clean(Text(row, "Make"));
+        if (!SameMake(localMake, make))
+            return null;
         var model = Clean(Text(row, "Model"));
         var series = Clean(Text(row, "Series"));
         if (string.IsNullOrEmpty(model) && !string.IsNullOrEmpty(series))
@@ -60,6 +63,17 @@ public static class VehicleLookup
         if (!string.IsNullOrEmpty(body))
             parts.Add(body);
         return parts.Count >= 2 ? string.Join(" · ", parts) : null;
+    }
+
+    private static bool SameMake(string local, string remote)
+    {
+        if (local.Length == 0 || remote.Length == 0)
+            return false;
+        if (local.Equals(remote, StringComparison.OrdinalIgnoreCase))
+            return true;
+        var localRoot = local.Split(' ')[0];
+        var remoteRoot = remote.Split(' ')[0];
+        return localRoot.Equals(remoteRoot, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string Text(JsonElement row, string name)

@@ -69,10 +69,12 @@ public sealed class SessionLink : IDisposable
     public static async Task RetireAsync(string code, string host, int relayPort, CancellationToken ct = default)
     {
         var digits = RequireCode(code);
+        var jobs = new List<Task>();
         foreach (var port in FastRelay.TcpPorts)
-            await ConsumeOnceAsync(digits, port, 'T', host, relayPort, ct);
+            jobs.Add(ConsumeOnceAsync(digits, port, 'T', host, relayPort, ct));
         foreach (var port in FastRelay.UdpPorts)
-            await ConsumeOnceAsync(digits, port, 'U', host, relayPort, ct);
+            jobs.Add(ConsumeOnceAsync(digits, port, 'U', host, relayPort, ct));
+        await Task.WhenAll(jobs);
     }
 
     private static async Task ConsumeOnceAsync(string digits, int listenPort, char kind, string host, int relayPort, CancellationToken ct)
