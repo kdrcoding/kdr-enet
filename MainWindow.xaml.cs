@@ -27,6 +27,10 @@ public partial class MainWindow : Window
     private bool _sideChosen;
     private bool _shutdown;
     private bool _closeWarned;
+    private bool _holdUpdateLine;
+    private bool _updateReady;
+    private int _updateGate;
+    private AppUpdate.Offer? _offer;
 
     public MainWindow()
     {
@@ -112,6 +116,7 @@ public partial class MainWindow : Window
         QueuePing();
         _timer.Start();
         _pingTimer.Start();
+        await LookForUpdateAsync();
     }
 
     private async void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -148,6 +153,9 @@ public partial class MainWindow : Window
         }
 
         _vm.SessionOn = false;
+        if (_updateReady)
+            await InstallUpdateAsync();
+
         Close();
     }
 
@@ -263,6 +271,7 @@ public partial class MainWindow : Window
     {
         _timer.Stop();
         _vm.IsBusy = true;
+        var stopped = false;
         try
         {
             await _session.StopAsync();
@@ -273,6 +282,7 @@ public partial class MainWindow : Window
             _vm.PeerLive = false;
             _vm.PeerFrom = "";
             _vm.AddLog("Session off.");
+            stopped = true;
         }
         catch (Exception ex)
         {
@@ -281,9 +291,16 @@ public partial class MainWindow : Window
         finally
         {
             _vm.IsBusy = false;
-            _timer.Start();
-            await ScanAsync(probe: true);
         }
+
+        if (stopped && _updateReady && !_shutdown && await InstallUpdateAsync())
+        {
+            Application.Current.Shutdown();
+            return;
+        }
+
+        _timer.Start();
+        await ScanAsync(probe: true);
     }
 
     private async void Refresh_Click(object sender, RoutedEventArgs e)
@@ -992,8 +1009,77 @@ public partial class MainWindow : Window
         _vm.NextDetail = sentence;
     }
 
+    private async Task LookForUpdateAsync()
+    {
+        if (_shutdown)
+            return;
+        try
+        {
+            var offer = await AppUpdate.FindAsync();
+            if (offer is not AppUpdate.Offer ready || _shutdown)
+                return;
+            _offer = ready;
+            if (_vm.SessionOn || _vm.IsBusy)
+            {
+                _updateReady = true;
+                _vm.AddLog("Version " + AppUpdate.Text(ready.Version) + " is ready. Click Stop when you are done. The new version opens after that.", alert: true);
+                return;
+            }
+
+            if (await InstallUpdateAsync())
+                Application.Current.Shutdown();
+        }
+        catch
+        {
+            // GitHub did not answer. This version keeps running.
+        }
+    }
+
+    private async Task<bool> InstallUpdateAsync()
+    {
+        if (_offer is not AppUpdate.Offer offer)
+            return false;
+        if (Interlocked.Exchange(ref _updateGate, 1) != 0)
+            return false;
+
+        _holdUpdateLine = true;
+        _updateReady = false;
+        _timer.Stop();
+        _pingTimer.Stop();
+        _vm.IsBusy = true;
+        _vm.LastLineAlert = false;
+        var label = AppUpdate.Text(offer.Version);
+        Mark("good", "Version " + label + " is ready. Downloading it.");
+        try
+        {
+            var file = await AppUpdate.DownloadAsync(offer.Url, AppUpdate.Folder);
+            Mark("good", "Opening version " + label + ". Click Yes if Windows asks.");
+            AppUpdate.StartSwap(file, Environment.ProcessId, Environment.ProcessPath);
+            _shutdown = true;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _holdUpdateLine = false;
+            _vm.IsBusy = false;
+            _offer = null;
+            Mark("wrong", ex is InvalidOperationException
+                ? ex.Message
+                : "The new version did not download. This one keeps running.");
+            if (!_shutdown)
+            {
+                _timer.Start();
+                _pingTimer.Start();
+            }
+
+            return false;
+        }
+    }
+
     private void SetNextStep(ScanResult? result)
     {
+        if (_holdUpdateLine)
+            return;
         _vm.ShowDriver = false;
         PaintLink();
         if (_vm.SessionOn && _vm.Session.State == "warn")
