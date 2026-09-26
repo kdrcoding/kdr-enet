@@ -25,6 +25,7 @@ public sealed class SessionService
     private SessionLink? _link;
     private string? _vinForIp;
     private string _vin = "";
+    public Action? OnLive { get; set; }
 
     private static readonly string[] VpnHints =
     {
@@ -296,6 +297,11 @@ public sealed class SessionService
             StopLink();
             var link = new SessionLink();
             link.OnNote = message => Report(progress, message);
+            link.OnLive = () =>
+            {
+                try { OnLive?.Invoke(); }
+                catch { /* the window updates on its own */ }
+            };
             try
             {
                 if (carSide)

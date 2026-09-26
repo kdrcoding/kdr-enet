@@ -40,7 +40,7 @@ Use this when the number at the top is low, such as 50 ms.
 1. Click **E-Sys laptop**.
 2. Type the 6 numbers. Click **Join**.
 3. The window says **Identifying**, then **Found** and connects, or **Not found**.
-4. In E-Sys use `tcp://127.0.0.1:6801`. Leave this window open.
+4. In E-Sys use the address the window shows, `tcp://127.0.0.1:6801`. Leave this window open.
 
 <p align="center">
   <img src="docs/car.png" width="360" alt="Car laptop. Get code, then read the 6 numbers.">

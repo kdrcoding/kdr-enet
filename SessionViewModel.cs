@@ -261,6 +261,48 @@ public sealed class SessionViewModel : INotifyPropertyChanged
     public bool ShowVin => IsCarSide && VinLine.Length > 0;
     public bool ShowCarFacts => IsCarSide && CarFactsLine.Length > 0;
 
+    private string _linkState = "Not connected";
+    private string _linkTone = "missing";
+    private string _linkHint = "";
+    private string _linkAddress = "";
+    public bool PeerLive { get; set; }
+
+    public string LinkState
+    {
+        get => _linkState;
+        set => Set(ref _linkState, value);
+    }
+
+    public string LinkTone
+    {
+        get => _linkTone;
+        set => Set(ref _linkTone, value);
+    }
+
+    public string LinkHint
+    {
+        get => _linkHint;
+        set
+        {
+            if (!Set(ref _linkHint, value))
+                return;
+            OnPropertyChanged(nameof(ShowLinkAddress));
+        }
+    }
+
+    public string LinkAddress
+    {
+        get => _linkAddress;
+        set
+        {
+            if (!Set(ref _linkAddress, value))
+                return;
+            OnPropertyChanged(nameof(ShowLinkAddress));
+        }
+    }
+
+    public bool ShowLinkAddress => LinkAddress.Length > 0;
+
     public string LastLine
     {
         get => _lastLine;
