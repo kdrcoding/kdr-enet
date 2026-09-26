@@ -531,7 +531,7 @@ public partial class MainWindow : Window
 
     private void QueuePing()
     {
-        if (_shutdown || _vm.IsBusy)
+        if (_shutdown || _vm.IsBusy || _vm.SessionOn)
             return;
         if (!RelaySettings.TryGet(out var host, out var port))
         {

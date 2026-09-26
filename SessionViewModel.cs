@@ -228,7 +228,13 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         PingText = milliseconds + " ms";
         PingTone = milliseconds >= 200 ? "wrong" : "good";
         if (!pathLocked && !SessionOn)
-            UseRadmin = milliseconds >= 200;
+        {
+            var far = UseRadmin ? milliseconds > 140 : milliseconds >= 200;
+            if (far != UseRadmin)
+                UseRadmin = far;
+            else
+                RefreshRadminHint();
+        }
         else
             RefreshRadminHint();
     }

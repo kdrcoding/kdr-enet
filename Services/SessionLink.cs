@@ -138,7 +138,7 @@ public sealed class SessionLink : IDisposable
                     try
                     {
                         using var connectBudget = CancellationTokenSource.CreateLinkedTokenSource(ct);
-                        connectBudget.CancelAfter(TimeSpan.FromSeconds(2));
+                        connectBudget.CancelAfter(TimeSpan.FromSeconds(8));
                         await car.ConnectAsync(new IPEndPoint(vehicle, port), connectBudget.Token);
                         await PumpSocketsAsync(held.Client, car, ct);
                     }
@@ -281,15 +281,13 @@ public sealed class SessionLink : IDisposable
 
     private async Task<TcpClient> DialAsync(string host, int port, CancellationToken ct)
     {
-        var client = new TcpClient { NoDelay = true };
+        var client = new TcpClient();
         try
         {
+            Tune(client.Client);
             using var budget = CancellationTokenSource.CreateLinkedTokenSource(ct);
             budget.CancelAfter(TimeSpan.FromSeconds(8));
             await client.ConnectAsync(host, port, budget.Token);
-            client.Client.NoDelay = true;
-            client.Client.SendBufferSize = 65536;
-            client.Client.ReceiveBufferSize = 65536;
             Track(client);
             return client;
         }
@@ -371,15 +369,13 @@ public sealed class SessionLink : IDisposable
     {
         var forward = PipeAsync(left, right, ct);
         var back = PipeAsync(right, left, ct);
-        await Task.WhenAny(forward, back);
-        try { left.Close(); } catch { /* unblocks the other direction */ }
-        try { right.Close(); } catch { /* unblocks the other direction */ }
-        try { await Task.WhenAll(forward, back); } catch { /* one direction already ended */ }
+        try { await Task.WhenAll(forward, back); }
+        catch { /* one direction already ended */ }
     }
 
     private static async Task PipeAsync(Socket from, Socket to, CancellationToken ct)
     {
-        var buffer = ArrayPool<byte>.Shared.Rent(32768);
+        var buffer = ArrayPool<byte>.Shared.Rent(65536);
         try
         {
             while (true)
@@ -394,10 +390,11 @@ public sealed class SessionLink : IDisposable
         }
         catch
         {
-            // The paired direction closes both sockets.
+            // The other direction finishes when this side closes its write half.
         }
         finally
         {
+            try { to.Shutdown(SocketShutdown.Send); } catch { /* already closed */ }
             ArrayPool<byte>.Shared.Return(buffer);
         }
     }
@@ -505,7 +502,7 @@ public sealed class SessionLink : IDisposable
     private static void Tune(Socket socket)
     {
         socket.NoDelay = true;
-        socket.SendBufferSize = 65536;
-        socket.ReceiveBufferSize = 65536;
+        socket.SendBufferSize = 512 * 1024;
+        socket.ReceiveBufferSize = 512 * 1024;
     }
 }

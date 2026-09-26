@@ -114,7 +114,7 @@ public sealed class FastRelay : IDisposable
         using var car = NewTcpSocket();
         try
         {
-            using var connectCancel = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+            using var connectCancel = new CancellationTokenSource(TimeSpan.FromSeconds(8));
             await car.ConnectAsync(new IPEndPoint(vehicle, targetPort), connectCancel.Token);
             var toCar = PipeAsync(remote, car);
             var toRemote = PipeAsync(car, remote);
@@ -128,7 +128,7 @@ public sealed class FastRelay : IDisposable
 
     private static async Task PipeAsync(Socket from, Socket to)
     {
-        var buffer = ArrayPool<byte>.Shared.Rent(32768);
+        var buffer = ArrayPool<byte>.Shared.Rent(65536);
         try
         {
             while (true)
@@ -202,7 +202,7 @@ public sealed class FastRelay : IDisposable
     private static void Tune(Socket socket)
     {
         socket.NoDelay = true;
-        socket.SendBufferSize = 65536;
-        socket.ReceiveBufferSize = 65536;
+        socket.SendBufferSize = 512 * 1024;
+        socket.ReceiveBufferSize = 512 * 1024;
     }
 }
