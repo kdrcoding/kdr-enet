@@ -34,6 +34,8 @@ Cables for the session: **ENET**, **MHD**, **ICOM**.
 1. Open KDR ENET → **E-Sys laptop**
 2. Type the code in the **6 boxes** → **Join**
 3. After Join, in E-Sys put `tcp://127.0.0.1:6801`
+
+The top of the window shows the delay to the session server, in milliseconds. At 200 ms or more the server is far. **Open Radmin** starts Radmin if it is installed, or opens the Radmin page so both laptops can use a shorter path.
 4. Leave this window open
 
 **Stop** on both laptops when the coding is done.
