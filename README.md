@@ -15,6 +15,8 @@ One laptop stays with the car. The other laptop runs E-Sys, anywhere. They do no
 
 Both laptops run this same app. The first time, read About and click **I agree**.
 
+From this version on, the app checks GitHub when it opens. If a newer version is there, it downloads that file and opens it. Click **Yes** if Windows asks. A session that is already open waits until **Stop**.
+
 ## Why this app
 
 **The car laptop is the bridge.** On Radmin VPN, Start listens on this laptop and passes E-Sys traffic straight to the cable. The packets do not go through the San Jose server. That is the fast path when the two laptops are closer to each other than they are to California.

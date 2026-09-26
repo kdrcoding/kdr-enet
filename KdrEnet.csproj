@@ -9,10 +9,10 @@
     <ApplicationIcon>Assets\kdr-enet.ico</ApplicationIcon>
     <AssemblyName>KdrEnet</AssemblyName>
     <RootNamespace>KdrEnet</RootNamespace>
-    <Version>2.7.0</Version>
-    <AssemblyVersion>2.7.0.0</AssemblyVersion>
-    <FileVersion>2.7.0.0</FileVersion>
-    <InformationalVersion>2.7.0</InformationalVersion>
+    <Version>2.8.0</Version>
+    <AssemblyVersion>2.8.0.0</AssemblyVersion>
+    <FileVersion>2.8.0.0</FileVersion>
+    <InformationalVersion>2.8.0</InformationalVersion>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <DebuggerSupport>false</DebuggerSupport>
     <EventSourceSupport>false</EventSourceSupport>
