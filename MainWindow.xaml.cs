@@ -483,14 +483,8 @@ public partial class MainWindow : Window
                 return;
             }
 
-            if (RadminLaunch.IsRunning())
-            {
-                _vm.AddLog("Radmin VPN is already open.");
-                return;
-            }
-
             RadminLaunch.Open();
-            _vm.AddLog("Radmin VPN is open. Join the same network on both laptops.");
+            _vm.AddLog("Radmin VPN is open.");
         }
         catch (Exception ex)
         {
