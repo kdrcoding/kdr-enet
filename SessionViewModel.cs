@@ -233,6 +233,34 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         set => Set(ref _statusLine, value);
     }
 
+    private string _vinLine = "";
+    private string _carFactsLine = "";
+
+    public string VinLine
+    {
+        get => _vinLine;
+        set
+        {
+            if (!Set(ref _vinLine, value))
+                return;
+            OnPropertyChanged(nameof(ShowVin));
+        }
+    }
+
+    public string CarFactsLine
+    {
+        get => _carFactsLine;
+        set
+        {
+            if (!Set(ref _carFactsLine, value))
+                return;
+            OnPropertyChanged(nameof(ShowCarFacts));
+        }
+    }
+
+    public bool ShowVin => IsCarSide && VinLine.Length > 0;
+    public bool ShowCarFacts => IsCarSide && CarFactsLine.Length > 0;
+
     public string LastLine
     {
         get => _lastLine;
@@ -405,6 +433,8 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(ShowCarRadmin));
         OnPropertyChanged(nameof(ShowTechCode));
         OnPropertyChanged(nameof(ShowTechRadmin));
+        OnPropertyChanged(nameof(ShowVin));
+        OnPropertyChanged(nameof(ShowCarFacts));
         OnPropertyChanged(nameof(RadminReadout));
         OnPropertyChanged(nameof(SideSwitchLabel));
         OnPropertyChanged(nameof(GuideLine));

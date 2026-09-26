@@ -19,6 +19,9 @@ public partial class MainWindow : Window
     private ScanResult? _lastScan;
     private string? _heldVehicleIp;
     private int _quietScans;
+    private string _shownVin = "";
+    private string _shownForIp = "";
+    private int _factsGen;
     private int _pingGate;
     private bool _pathLocked;
     private bool _sideChosen;
@@ -771,16 +774,89 @@ public partial class MainWindow : Window
                 _vm.IsCarSide = result.VehicleIp is not null || result.CableState == "ok";
         }
 
+        ApplyVin(result);
         _lastScan = result;
         SetNextStep(result);
 
-        var signature = result.CableDetail + "|" + result.PowerDetail + "|" + result.VehicleIp + "|" + result.VehicleTitle;
+        var signature = result.CableDetail + "|" + result.PowerDetail + "|" + result.VehicleIp + "|" + result.VehicleTitle + "|" + result.Vin;
         if (signature == _signature)
             return;
 
         _signature = signature;
         foreach (var note in result.Notes)
             _vm.AddLog(note);
+    }
+
+    private void ApplyVin(ScanResult result)
+    {
+        if (AppSettings.Cable == CableKind.Kdcan || result.CableState != "ok" || string.IsNullOrEmpty(_vm.VehicleIp))
+        {
+            ClearVin();
+            return;
+        }
+
+        if (result.Vin.Length == 17)
+        {
+            if (result.Vin == _shownVin && _shownForIp == _vm.VehicleIp)
+                return;
+            _shownVin = result.Vin;
+            _shownForIp = _vm.VehicleIp;
+            var facts = VehicleReader.Describe(result.Vin);
+            _vm.VinLine = "VIN " + result.Vin;
+            _vm.CarFactsLine = JoinFacts(facts.Year, facts.Make);
+            var gen = ++_factsGen;
+            _ = FillModelAsync(result.Vin, facts.Year, gen);
+            return;
+        }
+
+        if (_shownVin.Length == 17 && _shownForIp == _vm.VehicleIp)
+            return;
+
+        if (result.VinAttempted)
+        {
+            _shownVin = "";
+            _shownForIp = _vm.VehicleIp;
+            _factsGen++;
+            _vm.VinLine = "The VIN did not come back.";
+            _vm.CarFactsLine = "";
+        }
+    }
+
+    private void ClearVin()
+    {
+        if (_shownVin.Length == 0 && _vm.VinLine.Length == 0 && _vm.CarFactsLine.Length == 0)
+            return;
+        _shownVin = "";
+        _shownForIp = "";
+        _factsGen++;
+        _vm.VinLine = "";
+        _vm.CarFactsLine = "";
+    }
+
+    private async Task FillModelAsync(string vin, int? year, int gen)
+    {
+        try
+        {
+            var line = await VehicleLookup.DescribeAsync(vin, year);
+            if (gen != _factsGen || _shownVin != vin)
+                return;
+            if (!string.IsNullOrEmpty(line))
+                _vm.CarFactsLine = line;
+        }
+        catch
+        {
+            // The VIN stays on screen. The model stays off when the lookup does not answer.
+        }
+    }
+
+    private static string JoinFacts(int? year, string? make)
+    {
+        var parts = new List<string>();
+        if (year is int value)
+            parts.Add(value.ToString());
+        if (!string.IsNullOrWhiteSpace(make))
+            parts.Add(make);
+        return string.Join(" · ", parts);
     }
 
     private void Driver_Click(object sender, RoutedEventArgs e)

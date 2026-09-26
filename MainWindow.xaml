@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:KdrEnet"
         Title="KDR ENET"
         Width="520"
-        Height="760"
+        Height="820"
         MinWidth="440"
         MinHeight="460"
         ResizeMode="CanResize"
@@ -248,8 +248,14 @@
             <TextBlock Text="{Binding GuideLine}" FontSize="14" Foreground="#f4f7fb" TextWrapping="Wrap" Margin="0,12,0,0"/>
         </StackPanel>
 
-        <TextBlock Grid.Row="4" Text="{Binding StatusLine}" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,8"
-                   Visibility="{Binding IsCarSide, Converter={StaticResource BoolVis}}"/>
+        <StackPanel Grid.Row="4" Margin="0,0,0,8">
+            <TextBlock Text="{Binding StatusLine}" FontSize="13" Foreground="#8ea0b5"
+                       Visibility="{Binding IsCarSide, Converter={StaticResource BoolVis}}"/>
+            <TextBlock Text="{Binding VinLine}" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0"
+                       Visibility="{Binding ShowVin, Converter={StaticResource BoolVis}}"/>
+            <TextBlock Text="{Binding CarFactsLine}" FontSize="14" Foreground="#d5deea" TextWrapping="Wrap" Margin="0,2,0,0"
+                       Visibility="{Binding ShowCarFacts, Converter={StaticResource BoolVis}}"/>
+        </StackPanel>
 
         <StackPanel Grid.Row="5" VerticalAlignment="Center">
             <StackPanel Visibility="{Binding ShowCarCode, Converter={StaticResource BoolVis}}">
