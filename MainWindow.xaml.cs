@@ -373,6 +373,41 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void Check_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_vm.CanCheck || !EnsureAccepted())
+            return;
+        if (!RelaySettings.TryGet(out var host, out var port))
+            return;
+
+        var digits = SessionLink.Digits(_vm.CodeInput);
+        _timer.Stop();
+        _vm.IsBusy = true;
+        Mark("missing", "Loading. Identifying the code.");
+        try
+        {
+            var found = await SessionLink.IdentifyAsync(digits, host, port);
+            _vm.IdentifyTone = found ? "good" : "wrong";
+            _vm.IdentifyText = found
+                ? "Found. That code is active. Click Join."
+                : "Not found. No car laptop is waiting on that code.";
+            SetNextStep(_lastScan);
+        }
+        catch (Exception ex)
+        {
+            _vm.IdentifyTone = "wrong";
+            _vm.IdentifyText = "Not found. The session server did not answer.";
+            _vm.AddLog(ex.Message, alert: true);
+            SetNextStep(_lastScan);
+        }
+        finally
+        {
+            _vm.IsBusy = false;
+            if (!_shutdown)
+                _timer.Start();
+        }
+    }
+
     private void ExplainFailure(Exception ex)
     {
         var missingServer = ex.Message.Contains("session server", StringComparison.OrdinalIgnoreCase);
@@ -748,6 +783,12 @@ public partial class MainWindow : Window
             if (SessionLink.Digits(_vm.CodeInput).Length != 6)
             {
                 Mark("missing", "The 6-digit code is missing. Type it in the boxes above. It comes from the car laptop.");
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(_vm.IdentifyText))
+            {
+                Mark(_vm.IdentifyTone, _vm.IdentifyText);
                 return;
             }
 

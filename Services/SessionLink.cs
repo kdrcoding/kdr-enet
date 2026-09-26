@@ -32,6 +32,36 @@ public sealed class SessionLink : IDisposable
         catch { /* the session itself keeps running */ }
     }
 
+    public static async Task<bool> IdentifyAsync(string code, string host, int port, CancellationToken ct = default)
+    {
+        var digits = RequireCode(code);
+        using var client = new TcpClient();
+        Tune(client.Client);
+        using (var connect = CancellationTokenSource.CreateLinkedTokenSource(ct))
+        {
+            connect.CancelAfter(TimeSpan.FromSeconds(8));
+            await client.ConnectAsync(host, port, connect.Token);
+        }
+
+        var stream = client.GetStream();
+        await WriteHelloAsync(stream, 'T', digits, 6801, 'T', ct);
+        try
+        {
+            using var wait = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            wait.CancelAfter(TimeSpan.FromSeconds(4));
+            var line = await ReadLineAsync(stream, 16, wait.Token);
+            return line == "OK";
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            return false;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+    }
+
     public static string NewCode()
         => RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
 
