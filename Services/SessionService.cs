@@ -23,6 +23,8 @@ public sealed class SessionService
 
     private FastRelay? _relay;
     private SessionLink? _link;
+    private string? _vinForIp;
+    private string _vin = "";
 
     private static readonly string[] VpnHints =
     {
@@ -49,11 +51,17 @@ public sealed class SessionService
         var word = AppSettings.VehicleWord;
 
         if (AppSettings.Cable == CableKind.Kdcan)
+        {
+            _vin = "";
+            _vinForIp = null;
             return ScanKdcan(title, word, best, others);
+        }
 
         var adapters = FindDiagAdapters(AppSettings.Cable);
         if (adapters.Count == 0)
         {
+            _vin = "";
+            _vinForIp = null;
             var driver = DriverCheck.Find(AppSettings.Cable);
             return new ScanResult
             {
@@ -88,14 +96,35 @@ public sealed class SessionService
 
         string? vehicleIp = null;
         var source = "";
-        if (probeVehicle && arpIp is null && IsLinkLocal(enet.LocalIp))
+        var vin = "";
+        var vinAttempted = false;
+        if (probeVehicle && IsLinkLocal(enet.LocalIp))
         {
-            var udpIp = ListenForVehicle(enet.LocalIp, TimeSpan.FromMilliseconds(400));
-            if (udpIp is not null)
+            if (arpIp is not null && arpIp == _vinForIp && _vin.Length == 17)
             {
-                vehicleIp = udpIp;
-                source = "The " + word + " answered on the cable.";
+                vin = _vin;
+                source = "The " + word + " is visible on the cable.";
             }
+            else
+            {
+                vinAttempted = true;
+                var found = VehicleReader.Read(enet.LocalIp, arpIp, TimeSpan.FromMilliseconds(800));
+                if (found is VehicleReader.Found hit)
+                {
+                    if (hit.Ip is not null)
+                        vehicleIp = hit.Ip;
+                    if (hit.Vin.Length == 17)
+                    {
+                        vin = hit.Vin;
+                        _vin = hit.Vin;
+                        _vinForIp = hit.Ip ?? arpIp;
+                    }
+                }
+            }
+        }
+        else if (_vin.Length == 17 && (arpIp is null || arpIp == _vinForIp))
+        {
+            vin = _vin;
         }
 
         if (vehicleIp is null && arpIp is not null)
@@ -104,7 +133,27 @@ public sealed class SessionService
             source = "The " + word + " is visible on the cable.";
         }
 
+        if (vehicleIp is null && probeVehicle)
+        {
+            _vin = "";
+            _vinForIp = null;
+            vin = "";
+        }
+        else if (vin.Length == 17)
+        {
+            source = "The " + word + " answered on the cable.";
+        }
+
         var awake = vehicleIp is not null;
+        var notes = new List<string>
+        {
+            awake
+                ? title + " found at " + vehicleIp + ". The module is awake."
+                : AppSettings.CableLabel + " is connected. The module is quiet."
+        };
+        if (vin.Length == 17)
+            notes.Add("VIN " + vin + ".");
+
         return new ScanResult
         {
             CableState = "ok",
@@ -120,9 +169,9 @@ public sealed class SessionService
             LocalEnetIp = enet.LocalIp,
             BestTechnician = best,
             OtherTechnicians = others,
-            Notes = awake
-                ? new[] { title + " found at " + vehicleIp + ". The module is awake." }
-                : new[] { AppSettings.CableLabel + " is connected. The module is quiet." }
+            Notes = notes,
+            Vin = vin,
+            VinAttempted = vinAttempted
         };
     }
 
@@ -393,66 +442,6 @@ public sealed class SessionService
         return new CommandResult(process.ExitCode, stdout, stderr);
     }
 
-    private static string? ListenForVehicle(string localIp, TimeSpan timeout)
-    {
-        Socket? socket = null;
-        try
-        {
-            socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, true);
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            socket.IOControl(SIO_UDP_CONNRESET, new byte[] { 0, 0, 0, 0 }, null);
-            socket.Bind(new IPEndPoint(IPAddress.Parse(localIp), 6811));
-            socket.ReceiveTimeout = (int)timeout.TotalMilliseconds;
-
-            var probe = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x11 };
-            try
-            {
-                socket.SendTo(probe, new IPEndPoint(IPAddress.Parse("169.254.255.255"), 6811));
-            }
-            catch (SocketException)
-            {
-                // Listening still works if the probe cannot leave this adapter.
-            }
-
-            var buffer = new byte[2048];
-            var deadline = DateTime.UtcNow + timeout;
-            while (DateTime.UtcNow < deadline)
-            {
-                var remaining = (int)(deadline - DateTime.UtcNow).TotalMilliseconds;
-                if (remaining <= 0)
-                    break;
-                socket.ReceiveTimeout = remaining;
-                try
-                {
-                    EndPoint remote = new IPEndPoint(IPAddress.Any, 0);
-                    var read = socket.ReceiveFrom(buffer, ref remote);
-                    if (read > 0 &&
-                        remote is IPEndPoint endPoint &&
-                        IsLinkLocal(endPoint.Address.ToString()) &&
-                        endPoint.Address.ToString() != localIp)
-                    {
-                        return endPoint.Address.ToString();
-                    }
-                }
-                catch (SocketException ex) when (ex.SocketErrorCode == SocketError.TimedOut)
-                {
-                    break;
-                }
-            }
-        }
-        catch (SocketException)
-        {
-            return null;
-        }
-        finally
-        {
-            socket?.Dispose();
-        }
-
-        return null;
-    }
-
     private static string? ReadArpNeighbor(int interfaceIndex, string localIp)
     {
         var size = 0;
@@ -679,8 +668,6 @@ public sealed class SessionService
     private static string Flatten(string text)
         => string.Join(" ", text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)).Trim();
 
-    private const int SIO_UDP_CONNRESET = -1744830452;
-
     private sealed record ProxyRow(string ListenAddress, int ListenPort, string ConnectAddress, int ConnectPort);
 
     private readonly record struct CommandResult(int Code, string Stdout, string Stderr)
@@ -709,6 +696,8 @@ public sealed class ScanResult
     public IReadOnlyList<string> Notes { get; init; } = Array.Empty<string>();
     public string DriverMessage { get; init; } = "";
     public string DriverUrl { get; init; } = "";
+    public string Vin { get; init; } = "";
+    public bool VinAttempted { get; init; }
 }
 
 public sealed record TechnicianAddress(string Ip, string Name, int Rank);

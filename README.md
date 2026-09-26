@@ -31,7 +31,7 @@ Use this when the number at the top is low, such as 50 ms.
 
 **Car laptop**
 
-1. Cable in. Ignition on. Wait until the bottom line says the car is awake.
+1. Cable in. Ignition on. The window shows the VIN. Year and make come from that VIN. The model is added when the VIN decodes cleanly. Wait until the bottom line says the car is awake.
 2. Click **Get code**. It stays until **Stop**. **New code** replaces it with a different one.
 3. Read the 6 numbers to the other person. Leave this window open.
 
