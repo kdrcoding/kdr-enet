@@ -36,7 +36,7 @@ public static class VehicleReader
         if (length < 8)
             return null;
         var payloadLength = ReadBe32(buffer, 0);
-        if (payloadLength <= 0 || payloadLength > 512)
+        if (payloadLength <= 0 || payloadLength > 1500)
             return null;
         if (ReadBe16(buffer, 4) != 0x0011)
             return null;
@@ -61,7 +61,7 @@ public static class VehicleReader
             return null;
         if (8 + payloadLength > length)
             return null;
-        var vin = Encoding.ASCII.GetString(buffer, 8, 17);
+        var vin = Encoding.ASCII.GetString(buffer, 8, 17).ToUpperInvariant();
         return IsVin(vin) ? vin : null;
     }
 
@@ -94,6 +94,10 @@ public static class VehicleReader
         var doipFacts = Describe("WBAJE5C59KWW12345");
         if (doipFacts.Year != 2019 || doipFacts.Make != "BMW")
             throw new InvalidOperationException("The DoIP sample year or make did not decode.");
+        if (PassesCheckDigit("WBA5X73332FH75734"))
+            throw new InvalidOperationException("A VIN with a bad check digit was accepted.");
+        if (!PassesCheckDigit("1HGCM82633A004352"))
+            throw new InvalidOperationException("A known VIN check digit was rejected.");
     }
 
     private static Found? ReadHsfz(string localIp, string? vehicleIp, TimeSpan timeout)
@@ -146,7 +150,7 @@ public static class VehicleReader
 
     private static Found? Receive(Socket socket, string localIp, TimeSpan timeout, Func<byte[], int, string?> parse)
     {
-        var buffer = new byte[512];
+        var buffer = new byte[2048];
         Found? seen = null;
         var deadline = DateTime.UtcNow + timeout;
         while (DateTime.UtcNow < deadline)
@@ -169,9 +173,10 @@ public static class VehicleReader
                 if (vin is not null)
                     return new Found(ip, vin);
             }
-            catch (SocketException ex) when (ex.SocketErrorCode == SocketError.TimedOut)
+            catch (SocketException ex) when (ex.SocketErrorCode is SocketError.TimedOut or SocketError.MessageSize)
             {
-                break;
+                if (ex.SocketErrorCode == SocketError.TimedOut)
+                    break;
             }
         }
 
@@ -222,6 +227,38 @@ public static class VehicleReader
         }
 
         return true;
+    }
+
+    public static bool PassesCheckDigit(string vin)
+    {
+        if (!IsVin(vin))
+            return false;
+        int[] weights = [8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2];
+        var sum = 0;
+        for (var i = 0; i < 17; i++)
+            sum += ValueOf(vin[i]) * weights[i];
+        var remainder = sum % 11;
+        var expected = remainder == 10 ? 'X' : (char)('0' + remainder);
+        return vin[8] == expected;
+    }
+
+    private static int ValueOf(char character)
+    {
+        if (character is >= '0' and <= '9')
+            return character - '0';
+        return character switch
+        {
+            'A' or 'J' => 1,
+            'B' or 'K' or 'S' => 2,
+            'C' or 'L' or 'T' => 3,
+            'D' or 'M' or 'U' => 4,
+            'E' or 'N' or 'V' => 5,
+            'F' or 'W' => 6,
+            'G' or 'P' or 'X' => 7,
+            'H' or 'Y' => 8,
+            'R' or 'Z' => 9,
+            _ => 0
+        };
     }
 
     private static int? YearFromVin(string vin)
