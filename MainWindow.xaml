@@ -175,7 +175,7 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                     <Button x:Name="KdrPathButton" Content="KDR server" Style="{StaticResource TextButton}" Margin="0,0,18,0" Click="ChooseKdr_Click"/>
-                    <Button x:Name="RadminPathButton" Content="My Radmin" Style="{StaticResource TextButton}" Click="ChooseRadmin_Click"/>
+                    <Button x:Name="RadminPathButton" Content="Radmin VPN" Style="{StaticResource TextButton}" Click="ChooseRadmin_Click"/>
                 </StackPanel>
                 <TextBlock Text="{Binding PingText}" FontSize="13" Margin="0,8,0,0">
                     <TextBlock.Style>
@@ -224,7 +224,9 @@
                 </StackPanel>
             </StackPanel>
             <StackPanel Visibility="{Binding ShowCarRadmin, Converter={StaticResource BoolVis}}">
-                <TextBlock Text="Address for the other laptop" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,10"/>
+                <TextBlock Text="Radmin VPN" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,10"/>
+                <TextBlock Text="On both laptops, open Radmin VPN and join the same network. Then click Start. The other laptop puts the address below into E-Sys."
+                           FontSize="15" TextWrapping="Wrap" Margin="0,0,0,14"/>
                 <TextBlock Text="{Binding RadminReadout}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/>
             </StackPanel>
             <StackPanel Visibility="{Binding ShowTechCode, Converter={StaticResource BoolVis}}">
@@ -243,8 +245,8 @@
                 </TextBlock>
             </StackPanel>
             <StackPanel Visibility="{Binding ShowTechRadmin, Converter={StaticResource BoolVis}}">
-                <TextBlock Text="Your Radmin" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,10"/>
-                <TextBlock Text="Open Radmin here and join the same network as the car laptop. In E-Sys paste the address that laptop shows. It looks like tcp://26.x.x.x:6801."
+                <TextBlock Text="Radmin VPN" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,10"/>
+                <TextBlock Text="Open Radmin VPN and join the same network as the car laptop. In E-Sys paste the address that laptop shows. It looks like tcp://26.x.x.x:6801."
                            FontSize="15" TextWrapping="Wrap"/>
             </StackPanel>
         </StackPanel>
@@ -278,7 +280,7 @@
             </TextBlock>
             <TextBlock Text="{Binding RadminHint}" FontSize="13" Foreground="#e8b15a" TextWrapping="Wrap" Margin="0,8,0,0"
                        Visibility="{Binding ShowRadmin, Converter={StaticResource BoolVis}}"/>
-            <Button Content="Open Radmin" Style="{StaticResource TextButton}" HorizontalAlignment="Left" Margin="0,6,0,0"
+            <Button Content="Open Radmin VPN" Style="{StaticResource TextButton}" HorizontalAlignment="Left" Margin="0,6,0,0"
                     Click="Radmin_Click" Visibility="{Binding UseRadmin, Converter={StaticResource BoolVis}}"/>
             <Button Content="Open driver page" Style="{StaticResource TextButton}" HorizontalAlignment="Left" Margin="0,8,0,0"
                     Click="Driver_Click" Visibility="{Binding ShowDriver, Converter={StaticResource BoolVis}}"/>
