@@ -27,6 +27,18 @@ internal static class RadminLaunch
         return null;
     }
 
+    public static bool IsRunning()
+    {
+        try
+        {
+            return Process.GetProcessesByName("Radmin").Length > 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public const string Portal = "https://www.radmin-vpn.com/";
 
     public static string? VpnIp()
@@ -56,8 +68,11 @@ internal static class RadminLaunch
 
     public static void Open()
     {
+        if (IsRunning())
+            return;
+
         var path = ExePath() ?? throw new InvalidOperationException(
-            "Radmin VPN is not installed on this laptop. Install it, open it on both laptops, and join the same network.");
+            "Radmin VPN is not installed. Install it from radmin-vpn.com, then join the same network on both laptops.");
         Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
     }
 

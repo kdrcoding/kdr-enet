@@ -136,7 +136,6 @@ public partial class MainWindow : Window
         {
             if (_vm.UseRadmin)
             {
-                LaunchRadmin();
                 var radminProgress = new Progress<string>(message => _vm.AddLog(message));
                 await _session.StartAsync(_vm.VehicleIp, radminProgress);
                 RefreshRadminAddress();
@@ -447,14 +446,13 @@ public partial class MainWindow : Window
 
     private void ChooseRadmin_Click(object sender, RoutedEventArgs e)
     {
-        if (!_vm.CanSwitch)
+        if (!_vm.CanSwitch || _vm.UseRadmin)
             return;
         _pathLocked = true;
         _vm.UseRadmin = true;
         RefreshRadminAddress();
         PaintPaths();
         SetNextStep(_lastScan);
-        LaunchRadmin();
     }
 
     private void PaintPaths()
@@ -481,12 +479,18 @@ public partial class MainWindow : Window
             if (RadminLaunch.ExePath() is null)
             {
                 Process.Start(new ProcessStartInfo(RadminLaunch.Portal) { UseShellExecute = true });
-                _vm.AddLog("Radmin is not on this laptop. The download page is open. Install it on both laptops and join the same network.");
+                _vm.AddLog("Radmin VPN is not installed. The download page is open. Install it, then join the same network on both laptops.");
+                return;
+            }
+
+            if (RadminLaunch.IsRunning())
+            {
+                _vm.AddLog("Radmin VPN is already open. Join the same network on both laptops.");
                 return;
             }
 
             RadminLaunch.Open();
-            _vm.AddLog("Radmin is open. Join the same network on both laptops.");
+            _vm.AddLog("Radmin VPN is open. On one laptop create a network. On the other, join that same network.");
         }
         catch (Exception ex)
         {
@@ -702,9 +706,9 @@ public partial class MainWindow : Window
             {
                 Mark("good", _vm.IsCarSide
                     ? (string.IsNullOrEmpty(_vm.RadminAddress)
-                        ? "The car is open. Open Radmin on both laptops and join the same network. The address shows here after that."
+                        ? "The car is open. In Radmin VPN, both laptops join the same network. The address shows here after that."
                         : "All good. On the other laptop, E-Sys uses tcp://" + _vm.RadminAddress + ":6801. Leave this window open.")
-                    : "Open Radmin on this laptop and join the same network. In E-Sys paste the address from the car laptop.");
+                    : "In Radmin VPN, join the same network as the car laptop. In E-Sys paste the address from that laptop.");
                 return;
             }
 
@@ -724,7 +728,7 @@ public partial class MainWindow : Window
         {
             if (_vm.UseRadmin)
             {
-                Mark("good", "Open Radmin and join the same network as the car laptop. In E-Sys paste the address that laptop shows.");
+                Mark("good", "In Radmin VPN, join the same network as the car laptop. In E-Sys paste the address that laptop shows.");
                 return;
             }
 
@@ -771,7 +775,7 @@ public partial class MainWindow : Window
         if (_vm.UseRadmin)
         {
             Mark("good", string.IsNullOrEmpty(_vm.RadminAddress)
-                ? "All good. The car is awake. Click Start, then join the same Radmin network on both laptops."
+                ? "All good. The car is awake. Click Start. In Radmin VPN, both laptops join the same network."
                 : "All good. Click Start. The other laptop uses tcp://" + _vm.RadminAddress + ":6801 in E-Sys.");
             return;
         }

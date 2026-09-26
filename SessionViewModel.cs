@@ -206,7 +206,7 @@ public sealed class SessionViewModel : INotifyPropertyChanged
     }
 
     public string RadminReadout => string.IsNullOrEmpty(RadminAddress)
-        ? "Join the same Radmin network"
+        ? "Join the same network in Radmin VPN"
         : "tcp://" + RadminAddress + ":6801";
 
     public bool ShowCarCode => IsCarSide && !UseRadmin;
@@ -245,15 +245,15 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         {
             ShowRadmin = true;
             RadminHint = string.IsNullOrEmpty(RadminAddress)
-                ? "Your Radmin. Both laptops join the same network. This program passes the car through it."
-                : "Your Radmin. On the other laptop, E-Sys uses tcp://" + RadminAddress + ":6801.";
+                ? "Radmin VPN. Both laptops join the same network, then click Start on the car laptop."
+                : "Radmin VPN. On the other laptop, E-Sys uses tcp://" + RadminAddress + ":6801.";
             return;
         }
 
         if (PingTone == "wrong" && PingText.EndsWith(" ms", StringComparison.Ordinal))
         {
             ShowRadmin = true;
-            RadminHint = PingText + ". The session server is far. My Radmin uses your own Radmin instead.";
+            RadminHint = PingText + ". The session server is far. Radmin VPN is the other way. Both laptops join the same network.";
             return;
         }
 
