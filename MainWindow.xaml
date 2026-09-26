@@ -291,6 +291,8 @@
         <StackPanel Grid.Row="6" Orientation="Horizontal" Margin="0,8,0,14">
             <Button Content="{Binding StartLabel}" Style="{StaticResource PrimaryButton}" MinWidth="108" Margin="0,0,8,0" Click="Start_Click" IsEnabled="{Binding CanStart}"
                     Visibility="{Binding IsCarSide, Converter={StaticResource BoolVis}}"/>
+            <Button Content="{Binding NewCodeLabel}" Style="{StaticResource GhostButton}" MinWidth="108" Margin="0,0,8,0" Click="NewCode_Click" IsEnabled="{Binding CanNewCode}"
+                    Visibility="{Binding ShowCarCode, Converter={StaticResource BoolVis}}"/>
             <Button Content="{Binding JoinLabel}" Style="{StaticResource PrimaryButton}" MinWidth="108" Margin="0,0,8,0" Click="Join_Click" IsEnabled="{Binding CanJoin}"
                     Visibility="{Binding ShowTechCode, Converter={StaticResource BoolVis}}"/>
             <Button Content="{Binding CheckLabel}" Style="{StaticResource GhostButton}" MinWidth="120" Margin="0,0,8,0" Click="Check_Click" IsEnabled="{Binding CanCheck}"

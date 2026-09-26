@@ -32,14 +32,14 @@ Use this when the number at the top is low, such as 50 ms.
 **Car laptop**
 
 1. Cable in. Ignition on. Wait until the bottom line says the car is awake.
-2. Click **Get code**.
+2. Click **Get code**. It stays until **Stop**. **New code** replaces it with a different one.
 3. Read the 6 numbers to the other person. Leave this window open.
 
 **E-Sys laptop**
 
 1. Click **E-Sys laptop**.
-2. Type the 6 numbers. Click **Check code**.
-3. **Found** means that car laptop is waiting. Click **Join**. **Not found** means no car laptop is waiting on those numbers.
+2. Type the 6 numbers. Click **Join**.
+3. The window says **Identifying**, then **Found** and connects, or **Not found**.
 4. In E-Sys use `tcp://127.0.0.1:6801`. Leave this window open.
 
 <p align="center">
