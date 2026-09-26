@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:KdrEnet"
         Title="KDR ENET"
         Width="520"
-        Height="600"
+        Height="640"
         MinWidth="440"
         MinHeight="460"
         ResizeMode="CanResize"
@@ -64,6 +64,35 @@
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Bd" Property="Opacity" Value="0.35"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ChoiceButton" TargetType="Button">
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="MinWidth" Value="96"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="#12161e"/>
+            <Setter Property="Foreground" Value="#d5deea"/>
+            <Setter Property="BorderBrush" Value="#3d4d66"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#1C69D4"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.4"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -157,6 +186,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -190,25 +220,26 @@
                 </TextBlock>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
-                <Button Content="Settings" Style="{StaticResource TextButton}" Margin="0,0,16,0" Click="Settings_Click"/>
-                <Button Content="About" Style="{StaticResource TextButton}" Click="About_Click"/>
+                <Button Content="Settings" Style="{StaticResource ChoiceButton}" Margin="0,0,8,0" Click="Settings_Click"/>
+                <Button Content="About" Style="{StaticResource ChoiceButton}" Click="About_Click"/>
             </StackPanel>
         </Grid>
 
-        <Grid Grid.Row="1" Margin="0,0,0,18">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <Button x:Name="CarRoleButton" Content="Car laptop" Style="{StaticResource RoleButton}" Margin="0,0,28,0" Click="ChooseCar_Click"/>
-            <Button x:Name="EsyRoleButton" Grid.Column="1" Content="E-Sys laptop" Style="{StaticResource RoleButton}" Click="ChooseEsy_Click"/>
-        </Grid>
+        <UniformGrid Grid.Row="1" Columns="2" Margin="0,0,0,10">
+            <Button x:Name="KdrPathButton" Content="KDR server" Style="{StaticResource ChoiceButton}" Margin="0,0,8,0" Click="ChooseKdr_Click"/>
+            <Button x:Name="RadminPathButton" Content="Radmin VPN" Style="{StaticResource ChoiceButton}" Click="ChooseRadmin_Click"/>
+        </UniformGrid>
 
-        <TextBlock Grid.Row="2" Text="{Binding StatusLine}" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,8"
+        <UniformGrid Grid.Row="2" Columns="2" Margin="0,0,0,16">
+            <Button x:Name="CarRoleButton" Content="Car laptop" Style="{StaticResource ChoiceButton}" Margin="0,0,8,0" Click="ChooseCar_Click"/>
+            <Button x:Name="EsyRoleButton" Content="E-Sys laptop" Style="{StaticResource ChoiceButton}" Click="ChooseEsy_Click"/>
+        </UniformGrid>
+
+        <TextBlock Grid.Row="3" Text="{Binding StatusLine}" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,8"
                    Visibility="{Binding IsCarSide, Converter={StaticResource BoolVis}}"/>
 
-        <StackPanel Grid.Row="3" VerticalAlignment="Center">
-            <StackPanel Visibility="{Binding IsCarSide, Converter={StaticResource BoolVis}}">
+        <StackPanel Grid.Row="4" VerticalAlignment="Center">
+            <StackPanel Visibility="{Binding ShowCarCode, Converter={StaticResource BoolVis}}">
                 <TextBlock Text="Read this out" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,10"/>
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{Binding Shown0}" Style="{StaticResource DigitRead}"/>
@@ -219,7 +250,11 @@
                     <TextBlock Text="{Binding Shown5}" Style="{StaticResource DigitRead}"/>
                 </StackPanel>
             </StackPanel>
-            <StackPanel Visibility="{Binding IsTechSide, Converter={StaticResource BoolVis}}">
+            <StackPanel Visibility="{Binding ShowCarRadmin, Converter={StaticResource BoolVis}}">
+                <TextBlock Text="Address for the other laptop" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,10"/>
+                <TextBlock Text="{Binding RadminReadout}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/>
+            </StackPanel>
+            <StackPanel Visibility="{Binding ShowTechCode, Converter={StaticResource BoolVis}}">
                 <TextBlock Text="Type the code" FontSize="13" Foreground="#8ea0b5" Margin="0,0,0,10"/>
                 <StackPanel Orientation="Horizontal">
                     <TextBox x:Name="Digit0" Style="{StaticResource DigitBox}"/>
@@ -234,20 +269,24 @@
                     <Run Text="   tcp://127.0.0.1:6801" Foreground="#f4f7fb" FontSize="16" FontWeight="SemiBold"/>
                 </TextBlock>
             </StackPanel>
+            <StackPanel Visibility="{Binding ShowTechRadmin, Converter={StaticResource BoolVis}}">
+                <TextBlock Text="Same Radmin VPN network as the car laptop. In E-Sys, paste the address that laptop shows."
+                           FontSize="15" TextWrapping="Wrap" Foreground="#f4f7fb"/>
+            </StackPanel>
         </StackPanel>
 
-        <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,8,0,14">
+        <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,8,0,14">
             <Button Content="{Binding StartLabel}" Style="{StaticResource PrimaryButton}" MinWidth="108" Margin="0,0,8,0" Click="Start_Click" IsEnabled="{Binding CanStart}"
                     Visibility="{Binding IsCarSide, Converter={StaticResource BoolVis}}"/>
             <Button Content="{Binding JoinLabel}" Style="{StaticResource PrimaryButton}" MinWidth="108" Margin="0,0,8,0" Click="Join_Click" IsEnabled="{Binding CanJoin}"
-                    Visibility="{Binding IsTechSide, Converter={StaticResource BoolVis}}"/>
+                    Visibility="{Binding ShowTechCode, Converter={StaticResource BoolVis}}"/>
             <Button Content="{Binding CopyLabel}" Style="{StaticResource GhostButton}" MinWidth="108" Margin="0,0,8,0" Click="Copy_Click" IsEnabled="{Binding CanCopy}"
                     Visibility="{Binding ShowCopy, Converter={StaticResource BoolVis}}"/>
             <Button Content="Stop" Style="{StaticResource GhostButton}" MinWidth="72" Click="Stop_Click"
                     Visibility="{Binding CanStop, Converter={StaticResource BoolVis}}"/>
         </StackPanel>
 
-        <StackPanel Grid.Row="5">
+        <StackPanel Grid.Row="6">
             <TextBlock Text="{Binding CheckWord}" FontSize="13" TextWrapping="Wrap">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
@@ -263,7 +302,9 @@
                     </Style>
                 </TextBlock.Style>
             </TextBlock>
-            <Button Content="Open driver page" Style="{StaticResource TextButton}" HorizontalAlignment="Left" Margin="0,8,0,0"
+            <Button Content="Open Radmin VPN" Style="{StaticResource GhostButton}" HorizontalAlignment="Left" Margin="0,8,0,0"
+                    Click="Radmin_Click" Visibility="{Binding UseRadmin, Converter={StaticResource BoolVis}}"/>
+            <Button Content="Open driver page" Style="{StaticResource GhostButton}" HorizontalAlignment="Left" Margin="0,8,0,0"
                     Click="Driver_Click" Visibility="{Binding ShowDriver, Converter={StaticResource BoolVis}}"/>
             <TextBlock Text="{Binding LastLine}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0" Foreground="#e8b15a"
                        Visibility="{Binding LastLineAlert, Converter={StaticResource BoolVis}}"/>

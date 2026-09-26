@@ -35,7 +35,7 @@ Cables for the session: **ENET**, **MHD**, **ICOM**.
 2. Type the code in the **6 boxes** → **Join**
 3. After Join, in E-Sys put `tcp://127.0.0.1:6801`
 
-The top of the window shows the delay to the session server, in milliseconds. Both laptops use the 6-digit code, then `tcp://127.0.0.1:6801`.
+The top of the window shows the delay to the session server, in milliseconds. **KDR server** uses the 6-digit code and `tcp://127.0.0.1:6801`. **Radmin VPN** uses a Radmin VPN network you already joined. On the car laptop, Start shows an address like `tcp://26.x.x.x:6801`.
 4. Leave this window open
 
 **Stop** on both laptops when the coding is done.

@@ -81,6 +81,7 @@ public partial class MainWindow : Window
         }
 
         await ScanAsync(probe: true);
+        PaintRoles();
         QueuePing();
         _timer.Start();
         _pingTimer.Start();
@@ -132,6 +133,21 @@ public partial class MainWindow : Window
         _vm.IsBusy = true;
         try
         {
+            if (_vm.UseRadmin)
+            {
+                var radminProgress = new Progress<string>(message => _vm.AddLog(message));
+                await _session.StartAsync(_vm.VehicleIp, radminProgress);
+                RefreshRadminAddress();
+                _vm.LastLineAlert = false;
+                _vm.SessionOn = true;
+                _vm.Session.Detail = string.IsNullOrEmpty(_vm.RadminAddress) ? "Radmin VPN" : _vm.RadminAddress;
+                _vm.Session.State = "ok";
+                _vm.AddLog(string.IsNullOrEmpty(_vm.RadminAddress)
+                    ? "The car is open. Join the same network in Radmin VPN. The address shows here after that."
+                    : "The car is open. On the other laptop, E-Sys uses tcp://" + _vm.RadminAddress + ":6801.");
+                return;
+            }
+
             var code = SessionLink.NewCode();
             if (!_vm.RelayReady)
             {
@@ -371,7 +387,9 @@ public partial class MainWindow : Window
     {
         if (!_vm.CanCopy)
             return;
-        var text = _vm.IsCarSide ? SessionLink.Digits(_vm.SessionCode) : "tcp://127.0.0.1:6801";
+        var text = _vm.UseRadmin
+            ? "tcp://" + _vm.RadminAddress + ":6801"
+            : _vm.IsCarSide ? SessionLink.Digits(_vm.SessionCode) : "tcp://127.0.0.1:6801";
         Clipboard.SetText(text);
         _vm.AddLog("Copied " + text + ".");
     }
@@ -389,7 +407,7 @@ public partial class MainWindow : Window
         _signature = "";
         PaintRoles();
         SetNextStep(_lastScan);
-        if (!car)
+        if (!car && !_vm.UseRadmin)
             Digit0.Focus();
     }
 
@@ -399,19 +417,82 @@ public partial class MainWindow : Window
             return;
         PaintRole(CarRoleButton, _vm.IsCarSide);
         PaintRole(EsyRoleButton, !_vm.IsCarSide);
+        PaintPaths();
         CarRoleButton.IsEnabled = _vm.CanSwitch || _vm.IsCarSide;
         EsyRoleButton.IsEnabled = _vm.CanSwitch || !_vm.IsCarSide;
     }
 
     private static void PaintRole(System.Windows.Controls.Button button, bool selected)
     {
-        button.Background = System.Windows.Media.Brushes.Transparent;
-        button.BorderThickness = new Thickness(0, 0, 0, selected ? 2 : 0);
-        button.BorderBrush = new System.Windows.Media.SolidColorBrush(
-            System.Windows.Media.Color.FromRgb(0x1C, 0x69, 0xD4));
-        button.Foreground = new System.Windows.Media.SolidColorBrush(selected
-            ? System.Windows.Media.Color.FromRgb(0xF4, 0xF7, 0xFB)
-            : System.Windows.Media.Color.FromRgb(0x8E, 0xA0, 0xB5));
+        var blue = System.Windows.Media.Color.FromRgb(0x1C, 0x69, 0xD4);
+        var line = System.Windows.Media.Color.FromRgb(0x3D, 0x4D, 0x66);
+        var ink = System.Windows.Media.Color.FromRgb(0xD5, 0xDE, 0xEA);
+        button.Background = new System.Windows.Media.SolidColorBrush(selected ? blue : System.Windows.Media.Color.FromRgb(0x12, 0x16, 0x1E));
+        button.BorderBrush = new System.Windows.Media.SolidColorBrush(selected ? blue : line);
+        button.BorderThickness = new Thickness(1);
+        button.Foreground = new System.Windows.Media.SolidColorBrush(selected ? System.Windows.Media.Colors.White : ink);
+    }
+
+    private void ChooseKdr_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_vm.CanSwitch || !_vm.UseRadmin)
+            return;
+        _vm.UseRadmin = false;
+        PaintPaths();
+        SetNextStep(_lastScan);
+    }
+
+    private void ChooseRadmin_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_vm.CanSwitch || _vm.UseRadmin)
+            return;
+        _vm.UseRadmin = true;
+        RefreshRadminAddress();
+        PaintPaths();
+        SetNextStep(_lastScan);
+    }
+
+    private void PaintPaths()
+    {
+        if (KdrPathButton is null || RadminPathButton is null)
+            return;
+        PaintRole(KdrPathButton, !_vm.UseRadmin);
+        PaintRole(RadminPathButton, _vm.UseRadmin);
+        KdrPathButton.IsEnabled = _vm.CanSwitch || !_vm.UseRadmin;
+        RadminPathButton.IsEnabled = _vm.CanSwitch || _vm.UseRadmin;
+    }
+
+    private void RefreshRadminAddress()
+    {
+        _vm.RadminAddress = RadminLaunch.VpnIp() ?? "";
+    }
+
+    private void Radmin_Click(object sender, RoutedEventArgs e) => LaunchRadmin();
+
+    private void LaunchRadmin()
+    {
+        try
+        {
+            if (RadminLaunch.ExePath() is null)
+            {
+                Process.Start(new ProcessStartInfo(RadminLaunch.Portal) { UseShellExecute = true });
+                _vm.AddLog("Radmin VPN is not installed. The download page is open.");
+                return;
+            }
+
+            if (RadminLaunch.IsRunning())
+            {
+                _vm.AddLog("Radmin VPN is already open.");
+                return;
+            }
+
+            RadminLaunch.Open();
+            _vm.AddLog("Radmin VPN is open. Join the same network on both laptops.");
+        }
+        catch (Exception ex)
+        {
+            _vm.AddLog(ex.Message, alert: true);
+        }
     }
 
     private async void Settings_Click(object sender, RoutedEventArgs e)
@@ -539,6 +620,8 @@ public partial class MainWindow : Window
 
     private void Apply(ScanResult result)
     {
+        if (_vm.UseRadmin)
+            RefreshRadminAddress();
         _vm.Cable.Detail = result.CableDetail;
         _vm.Cable.State = result.CableState;
         _vm.Power.Detail = result.PowerDetail;
@@ -552,7 +635,12 @@ public partial class MainWindow : Window
         {
             _vm.Car.Detail = string.IsNullOrEmpty(_vm.VehicleIp) ? result.VehicleDetail : _vm.VehicleIp;
             _vm.Car.State = result.VehicleIp is null ? "warn" : "ok";
-            if (_vm.Session.State != "warn")
+            if (_vm.UseRadmin && _vm.Session.State != "warn")
+            {
+                _vm.Session.Detail = string.IsNullOrEmpty(_vm.RadminAddress) ? "Radmin VPN" : _vm.RadminAddress;
+                _vm.Session.State = "ok";
+            }
+            else if (_vm.Session.State != "warn")
             {
                 _vm.Session.Detail = _vm.IsCarSide ? _vm.SessionCode : "Joined";
                 _vm.Session.State = "ok";
@@ -609,6 +697,16 @@ public partial class MainWindow : Window
 
         if (_vm.SessionOn)
         {
+            if (_vm.UseRadmin)
+            {
+                Mark("good", _vm.IsCarSide
+                    ? (string.IsNullOrEmpty(_vm.RadminAddress)
+                        ? "The car is open. Join the same network in Radmin VPN."
+                        : "All good. On the other laptop, E-Sys uses tcp://" + _vm.RadminAddress + ":6801.")
+                    : "Join the same Radmin VPN network. Paste the car laptop address into E-Sys.");
+                return;
+            }
+
             if (_vm.IsCarSide && !_vm.RelayReady)
             {
                 Mark("good", "All good. This code stays until you click Stop. The other laptop cannot join until the session server is set.");
@@ -623,6 +721,12 @@ public partial class MainWindow : Window
 
         if (!_vm.IsCarSide)
         {
+            if (_vm.UseRadmin)
+            {
+                Mark("good", "Join the same Radmin VPN network as the car laptop. Paste that address into E-Sys.");
+                return;
+            }
+
             if (SessionLink.Digits(_vm.CodeInput).Length != 6)
             {
                 Mark("missing", "The 6-digit code is missing. Type it in the boxes above. It comes from the car laptop.");
@@ -660,6 +764,14 @@ public partial class MainWindow : Window
         if (string.IsNullOrEmpty(_vm.VehicleIp))
         {
             Mark("missing", "The car is quiet. Turn the ignition on. If it stays quiet, the battery may be too low.");
+            return;
+        }
+
+        if (_vm.UseRadmin)
+        {
+            Mark("good", string.IsNullOrEmpty(_vm.RadminAddress)
+                ? "All good. The car is awake. Click Start."
+                : "All good. Click Start. The other laptop uses tcp://" + _vm.RadminAddress + ":6801.");
             return;
         }
 
