@@ -246,6 +246,7 @@ public sealed class SessionService
 
             StopLink();
             var link = new SessionLink();
+            link.OnNote = message => Report(progress, message);
             try
             {
                 if (carSide)

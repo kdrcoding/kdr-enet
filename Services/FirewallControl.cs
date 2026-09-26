@@ -6,14 +6,17 @@ using System.Runtime.InteropServices;
 namespace KdrEnet.Services;
 
 /// <summary>
-/// Opens Windows Firewall the way a remote ENET session does: Domain, Private,
-/// and Public profiles go off, plus an allow-inbound rule. Stop restores the
-/// exact on/off state from before the session.
+/// Allows the diagnostic ports for a Radmin VPN session.
+/// The firewall profiles stay on. An older session may have turned them off;
+/// Stop puts that saved state back.
 /// </summary>
 public static class FirewallControl
 {
     public const string RuleName = "KDR ENET";
-    private const string RuleDescription = "Allow inbound traffic for remote";
+    public const string TcpRuleName = "KDR ENET TCP";
+    public const string UdpRuleName = "KDR ENET UDP";
+    private const string RuleDescription = "KDR ENET diagnostic ports for this session";
+    private static readonly string[] RuleNames = { RuleName, TcpRuleName, UdpRuleName };
 
     private static readonly Profile[] Profiles =
     {
@@ -37,8 +40,20 @@ public static class FirewallControl
         {
             policy = CreatePolicy();
             rules = Get(policy, "Rules");
-            Get(rules!, "Item", RuleName);
-            return true;
+            foreach (var name in RuleNames)
+            {
+                try
+                {
+                    Get(rules!, "Item", name);
+                    return true;
+                }
+                catch
+                {
+                    // This name is not installed.
+                }
+            }
+
+            return false;
         }
         catch
         {
@@ -53,24 +68,10 @@ public static class FirewallControl
 
     public static string Open()
     {
-        var prior = HasSavedState() ? Load() : ReadCurrent();
-        if (!HasSavedState())
-            Save(prior);
-
-        try
-        {
-            foreach (var profile in Profiles)
-                SetProfile(profile, enabled: false);
-            AddAllowRule();
-        }
-        catch
-        {
-            try { Apply(prior); } catch { /* the original error is the one to show */ }
-            DeleteState();
-            throw;
-        }
-
-        return Describe(ReadCurrent());
+        RemoveAllowRule();
+        AddPortRule(TcpRuleName, 6, "6801,13400,50160");
+        AddPortRule(UdpRuleName, 17, "6811,13400");
+        return "Windows Firewall stays on. The diagnostic ports are allowed until you click Stop.";
     }
 
     public static void CloseSession()
@@ -171,9 +172,8 @@ public static class FirewallControl
         }
     }
 
-    private static void AddAllowRule()
+    private static void AddPortRule(string name, int protocol, string ports)
     {
-        RemoveAllowRule();
         object? policy = null;
         object? rules = null;
         object? rule = null;
@@ -185,12 +185,13 @@ public static class FirewallControl
                 ?? throw new InvalidOperationException("Windows Firewall rules are unavailable.");
             rule = Activator.CreateInstance(ruleType)
                 ?? throw new InvalidOperationException("Windows Firewall could not create a rule.");
-            Set(rule, "Name", RuleName);
+            Set(rule, "Name", name);
             Set(rule, "Description", RuleDescription);
             Set(rule, "Enabled", true);
             Set(rule, "Direction", 1);
             Set(rule, "Action", 1);
-            Set(rule, "Protocol", 256);
+            Set(rule, "Protocol", protocol);
+            Set(rule, "LocalPorts", ports);
             Set(rule, "Profiles", 0x7FFFFFFF);
             Set(rule, "InterfaceTypes", "All");
             rules!.GetType().InvokeMember("Add", BindingFlags.InvokeMethod, null, rules, new object[] { rule });
@@ -211,11 +212,21 @@ public static class FirewallControl
         {
             policy = CreatePolicy();
             rules = Get(policy, "Rules");
-            rules!.GetType().InvokeMember("Remove", BindingFlags.InvokeMethod, null, rules, new object[] { RuleName });
+            foreach (var name in RuleNames)
+            {
+                try
+                {
+                    rules!.GetType().InvokeMember("Remove", BindingFlags.InvokeMethod, null, rules, new object[] { name });
+                }
+                catch
+                {
+                    // Already gone.
+                }
+            }
         }
         catch
         {
-            // Already gone.
+            // Firewall rules are already gone.
         }
         finally
         {
@@ -289,19 +300,6 @@ public static class FirewallControl
         process.StandardOutput.ReadToEnd();
         process.StandardError.ReadToEnd();
         process.WaitForExit();
-    }
-
-    private static string Describe(FirewallSnapshot now)
-    {
-        var off = new List<string>();
-        if (!now.Domain) off.Add("Domain");
-        if (!now.Private) off.Add("Private");
-        if (!now.Public) off.Add("Public");
-        if (off.Count == 3)
-            return "Windows Firewall is off for Domain, Private, and Public. Inbound traffic is allowed. Stop turns the previous firewall settings back on.";
-        if (off.Count > 0)
-            return "Windows Firewall is off for " + string.Join(", ", off) + ". Inbound traffic is allowed. Stop restores the previous settings.";
-        return "Inbound traffic is allowed for this session. Windows kept the firewall profiles on. Stop removes the allow rule.";
     }
 
     private readonly record struct Profile(int Id, string Label, string Netsh);
