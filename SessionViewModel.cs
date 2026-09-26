@@ -153,6 +153,8 @@ public sealed class SessionViewModel : INotifyPropertyChanged
     private string _pingTone = "missing";
     private bool _showRadmin;
     private string _radminHint = "";
+    private bool _useRadmin;
+    private string _radminAddress = "";
 
     public string PingText
     {
@@ -178,27 +180,77 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         set => Set(ref _radminHint, value);
     }
 
-    public void SetPing(int? milliseconds)
+    public bool UseRadmin
+    {
+        get => _useRadmin;
+        set
+        {
+            if (!Set(ref _useRadmin, value))
+                return;
+            NotifyCommands();
+            RefreshRadminHint();
+        }
+    }
+
+    public string RadminAddress
+    {
+        get => _radminAddress;
+        set
+        {
+            if (!Set(ref _radminAddress, value))
+                return;
+            OnPropertyChanged(nameof(RadminReadout));
+            NotifyCommands();
+            RefreshRadminHint();
+        }
+    }
+
+    public string RadminReadout => string.IsNullOrEmpty(RadminAddress)
+        ? "Join the same Radmin network"
+        : "tcp://" + RadminAddress + ":6801";
+
+    public bool ShowCarCode => IsCarSide && !UseRadmin;
+    public bool ShowCarRadmin => IsCarSide && UseRadmin;
+    public bool ShowTechCode => !IsCarSide && !UseRadmin;
+    public bool ShowTechRadmin => !IsCarSide && UseRadmin;
+    public bool ShowJoin => !IsCarSide && !UseRadmin;
+
+    public void NotePing(int? milliseconds, bool pathLocked)
     {
         if (milliseconds is null)
         {
             PingText = "No answer";
             PingTone = "wrong";
-            ShowRadmin = false;
-            RadminHint = "";
+            RefreshRadminHint();
             return;
         }
 
         PingText = milliseconds + " ms";
-        if (milliseconds >= 200)
+        PingTone = milliseconds >= 200 ? "wrong" : "good";
+        if (!pathLocked && !SessionOn)
+            UseRadmin = milliseconds >= 200;
+        else
+            RefreshRadminHint();
+    }
+
+    private void RefreshRadminHint()
+    {
+        if (UseRadmin)
         {
-            PingTone = "wrong";
             ShowRadmin = true;
-            RadminHint = milliseconds + " ms. The session server is far from this laptop. Open Radmin on both laptops for a shorter path.";
+            RadminHint = string.IsNullOrEmpty(RadminAddress)
+                ? "Your Radmin. Both laptops join the same network. This program passes the car through it."
+                : "Your Radmin. On the other laptop, E-Sys uses tcp://" + RadminAddress + ":6801.";
             return;
         }
 
-        PingTone = "good";
+        if (PingTone == "wrong" && PingText.EndsWith(" ms", StringComparison.Ordinal))
+        {
+            ShowRadmin = true;
+            RadminHint = PingText + ". The session server is far. My Radmin uses your own Radmin instead.";
+            return;
+        }
+
         ShowRadmin = false;
         RadminHint = "";
     }
@@ -227,7 +279,9 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         set => Set(ref _versionText, value);
     }
 
-    public bool CanCopy => IsCarSide ? SessionOn && SessionLink.Digits(SessionCode).Length == 6 : true;
+    public bool CanCopy => UseRadmin
+        ? IsCarSide && SessionOn && !string.IsNullOrEmpty(RadminAddress)
+        : IsCarSide ? SessionOn && SessionLink.Digits(SessionCode).Length == 6 : true;
 
     public bool IsBusy
     {
@@ -262,7 +316,7 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         }
     }
 
-    public string StartLabel => IsBusy ? "Working…" : "Get code";
+    public string StartLabel => IsBusy ? "Working…" : UseRadmin ? "Start" : "Get code";
 
     public string JoinLabel => IsBusy ? "Working…" : "Join";
 
@@ -287,13 +341,15 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         ? "Read this code to the E-Sys laptop. Leave this window open."
         : "Click Get code. The number shows here. Read it to the E-Sys laptop.";
 
-    public string CopyLabel => IsCarSide ? "Copy code" : "Copy address";
+    public string CopyLabel => UseRadmin || !IsCarSide ? "Copy address" : "Copy code";
 
-    public bool ShowCopy => !IsCarSide || SessionLink.Digits(SessionCode).Length == 6;
+    public bool ShowCopy => UseRadmin
+        ? IsCarSide && SessionOn && !string.IsNullOrEmpty(RadminAddress)
+        : !IsCarSide || SessionLink.Digits(SessionCode).Length == 6;
 
     public bool CanStart => !IsBusy && !SessionOn && IsCarSide && !string.IsNullOrEmpty(VehicleIp);
 
-    public bool CanJoin => !IsBusy && !SessionOn && IsTechSide && RelayReady && SessionLink.Digits(CodeInput).Length == 6;
+    public bool CanJoin => !UseRadmin && !IsBusy && !SessionOn && IsTechSide && RelayReady && SessionLink.Digits(CodeInput).Length == 6;
 
     public bool CanSwitch => !IsBusy && !SessionOn;
 
@@ -346,6 +402,12 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(CanSwitch));
         OnPropertyChanged(nameof(CanCopy));
         OnPropertyChanged(nameof(IsTechSide));
+        OnPropertyChanged(nameof(ShowCarCode));
+        OnPropertyChanged(nameof(ShowCarRadmin));
+        OnPropertyChanged(nameof(ShowTechCode));
+        OnPropertyChanged(nameof(ShowTechRadmin));
+        OnPropertyChanged(nameof(ShowJoin));
+        OnPropertyChanged(nameof(RadminReadout));
         OnPropertyChanged(nameof(SideSwitchLabel));
     }
 
