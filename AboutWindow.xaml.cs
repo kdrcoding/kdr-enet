@@ -13,6 +13,7 @@ public partial class AboutWindow : Window
         var label = version is null ? "1.1" : version.ToString(3);
         VersionLine.Text = label;
         CreatorLine.Text = "Created by " + LegalCopy.Creator;
+        SummaryLine.Text = LegalCopy.Summary;
         TermsBox.Text = LegalCopy.Terms;
         if (!requireConsent)
         {

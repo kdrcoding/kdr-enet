@@ -2,8 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="About"
-        Width="420"
-        Height="420"
+        Width="440"
+        Height="560"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="#0b0d13"
@@ -78,6 +78,7 @@
             </TextBlock>
             <TextBlock x:Name="VersionLine" Margin="0,6,0,0" Foreground="#8ea0b5" FontSize="13"/>
             <TextBlock x:Name="CreatorLine" Margin="0,4,0,0" FontSize="13" Foreground="#b7c3d1"/>
+            <TextBlock x:Name="SummaryLine" Margin="0,10,0,0" FontSize="13" Foreground="#f4f7fb" TextWrapping="Wrap"/>
             <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                 <Button Content="kdrcoding.com" Style="{StaticResource LinkButton}" Click="Site_Click"/>
                 <TextBlock Text="  ·  " Foreground="#8ea0b5"/>

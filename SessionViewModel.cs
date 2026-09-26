@@ -149,7 +149,7 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         set => Set(ref _checkTone, value);
     }
 
-    private string _pingText = "Measuring…";
+    private string _pingText = "Measuring the server…";
     private string _pingTone = "missing";
 
     public string PingText
@@ -168,18 +168,26 @@ public sealed class SessionViewModel : INotifyPropertyChanged
     {
         if (milliseconds is null)
         {
-            PingText = "No answer";
+            PingText = "The server did not answer";
             PingTone = "wrong";
             OnPropertyChanged(nameof(PingIsFar));
             return;
         }
 
-        PingText = milliseconds + " ms";
+        PingText = milliseconds + " ms to the server";
         PingTone = milliseconds >= 200 ? "wrong" : "good";
         OnPropertyChanged(nameof(PingIsFar));
     }
 
-    public bool PingIsFar => PingTone == "wrong" && PingText.EndsWith(" ms", StringComparison.Ordinal);
+    public bool PingIsFar => PingTone == "wrong" && PingText.Contains(" ms", StringComparison.Ordinal);
+
+    public string GuideLine => UseRadmin
+        ? (IsCarSide
+            ? "This laptop stays with the car. Open Radmin VPN, join the same network, then click Start."
+            : "This laptop runs E-Sys. Open Radmin VPN, join the same network, and paste the car laptop address into E-Sys.")
+        : (IsCarSide
+            ? "This laptop stays with the car. Click Get code, then read the 6 numbers to the other person."
+            : "This laptop runs E-Sys. Type the 6 numbers, click Join, then use the address shown here.");
 
     private bool _useRadmin;
     private string _radminAddress = "";
@@ -369,6 +377,7 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(ShowTechRadmin));
         OnPropertyChanged(nameof(RadminReadout));
         OnPropertyChanged(nameof(SideSwitchLabel));
+        OnPropertyChanged(nameof(GuideLine));
     }
 
     private bool Set<T>(ref T field, T value, [CallerMemberName] string? name = null)

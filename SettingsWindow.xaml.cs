@@ -9,8 +9,10 @@ public partial class SettingsWindow : Window
     private CableKind _cable;
     private VehicleKind _vehicle;
     private static readonly SolidColorBrush Mark = Freeze(Color.FromRgb(0x1C, 0x69, 0xD4));
-    private static readonly SolidColorBrush OnText = Freeze(Color.FromRgb(0xF4, 0xF7, 0xFB));
-    private static readonly SolidColorBrush OffText = Freeze(Color.FromRgb(0x8E, 0xA0, 0xB5));
+    private static readonly SolidColorBrush OffBg = Freeze(Color.FromRgb(0x12, 0x16, 0x1E));
+    private static readonly SolidColorBrush Line = Freeze(Color.FromRgb(0x3D, 0x4D, 0x66));
+    private static readonly SolidColorBrush OnText = Freeze(Color.FromRgb(0xFF, 0xFF, 0xFF));
+    private static readonly SolidColorBrush OffText = Freeze(Color.FromRgb(0xD5, 0xDE, 0xEA));
 
     public SettingsWindow()
     {
@@ -67,9 +69,10 @@ public partial class SettingsWindow : Window
 
     private static void PaintOne(Button button, bool selected)
     {
+        button.Background = selected ? Mark : OffBg;
         button.Foreground = selected ? OnText : OffText;
-        button.BorderBrush = Mark;
-        button.BorderThickness = new Thickness(0, 0, 0, selected ? 2 : 0);
+        button.BorderBrush = selected ? Mark : Line;
+        button.BorderThickness = new Thickness(1);
     }
 
     private static SolidColorBrush Freeze(Color color)
