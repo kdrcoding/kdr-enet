@@ -5,6 +5,7 @@ namespace KdrEnet.Services;
 internal static class RelaySettings
 {
     public const int DefaultPort = 7601;
+    public const string BuiltInHost = "64.181.254.89";
 
     public static bool TryGet(out string host, out int port)
     {
@@ -29,7 +30,9 @@ internal static class RelaySettings
             }
         }
 
-        return false;
+        host = BuiltInHost;
+        port = DefaultPort;
+        return true;
     }
 
     public static string SettingsPath => Path.Combine(
