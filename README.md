@@ -25,7 +25,7 @@ From this version on, the app checks GitHub when it opens. If a newer version is
 
 **Windows Firewall stays on.** Start does not turn the firewall off. It allows only the diagnostic ports for this session: TCP 6801, 13400, and 50160, and UDP 6811 and 13400. The other laptop can reach the car through those ports. The rest of this computer stays closed. **Stop** removes that allow rule. Some other tools turn the whole firewall off so any inbound traffic is accepted. This app does not.
 
-**One window.** The bottom line names what is missing. When someone is connected, that line stays quiet and the green Connected line carries it. Close to the server, use the 6-digit code. Far away, use the Radmin VPN address. You do not install .NET.
+**One window.** The small line on the car laptop names the cable. The big line is the session. The bottom line names what is missing. When someone is connected, that line stays quiet and the green Connected line carries it. Close to the server, use the 6-digit code. Far away, use the Radmin VPN address. You do not install .NET.
 
 ## KDR server
 
@@ -33,7 +33,7 @@ Use this when the number at the top is low, such as 50 ms.
 
 **Car laptop**
 
-1. Cable in. Ignition on. The window shows the VIN. Year and make come from that VIN. The model is added when the VIN decodes cleanly. Wait until the line says the car is awake.
+1. Cable in. Ignition on. The small line says **Cable missing** until the cable is in, then it says the car is awake. The window shows the VIN. Year and make come from that VIN. The model is added when the VIN decodes cleanly.
 2. Click **Get code**. It stays until **Stop**. **New code** replaces it. The window stays **Not connected** until someone joins, then **Connected** turns green. If they leave, it goes back to **Not connected**. On this path their home address is not visible. The car year, type, and VIN sit with that line once the code is up.
 3. Read the 6 numbers to the other person. Leave this window open.
 
