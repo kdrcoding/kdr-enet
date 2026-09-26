@@ -149,6 +149,60 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         set => Set(ref _checkTone, value);
     }
 
+    private string _pingText = "Measuring…";
+    private string _pingTone = "missing";
+    private bool _showRadmin;
+    private string _radminHint = "";
+
+    public string PingText
+    {
+        get => _pingText;
+        set => Set(ref _pingText, value);
+    }
+
+    public string PingTone
+    {
+        get => _pingTone;
+        set => Set(ref _pingTone, value);
+    }
+
+    public bool ShowRadmin
+    {
+        get => _showRadmin;
+        set => Set(ref _showRadmin, value);
+    }
+
+    public string RadminHint
+    {
+        get => _radminHint;
+        set => Set(ref _radminHint, value);
+    }
+
+    public void SetPing(int? milliseconds)
+    {
+        if (milliseconds is null)
+        {
+            PingText = "No answer";
+            PingTone = "wrong";
+            ShowRadmin = false;
+            RadminHint = "";
+            return;
+        }
+
+        PingText = milliseconds + " ms";
+        if (milliseconds >= 200)
+        {
+            PingTone = "wrong";
+            ShowRadmin = true;
+            RadminHint = milliseconds + " ms. The session server is far from this laptop. Open Radmin on both laptops for a shorter path.";
+            return;
+        }
+
+        PingTone = "good";
+        ShowRadmin = false;
+        RadminHint = "";
+    }
+
     public string StatusLine
     {
         get => _statusLine;

@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -313,6 +314,21 @@ public sealed class SessionLink : IDisposable
         var line = await ReadLineAsync(stream, 16, limit.Token);
         if (line != "OK")
             throw new IOException("The session server rejected the code.");
+    }
+
+    public static int? MeasureMilliseconds(string host, int port)
+    {
+        var clock = Stopwatch.StartNew();
+        try
+        {
+            Probe(host, port);
+        }
+        catch
+        {
+            return null;
+        }
+
+        return (int)clock.ElapsedMilliseconds;
     }
 
     private static void Probe(string host, int port)

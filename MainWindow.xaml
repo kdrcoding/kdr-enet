@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:KdrEnet"
         Title="KDR ENET"
         Width="520"
-        Height="520"
+        Height="560"
         MinWidth="440"
         MinHeight="460"
         ResizeMode="CanResize"
@@ -165,6 +165,21 @@
                     <Border Width="28" Height="3" Background="#0066b1"/>
                     <Border Width="28" Height="3" Background="#e22718"/>
                 </StackPanel>
+                <TextBlock Text="{Binding PingText}" FontSize="13" Margin="0,8,0,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="#8ea0b5"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding PingTone}" Value="good">
+                                    <Setter Property="Foreground" Value="#f4f7fb"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding PingTone}" Value="wrong">
+                                    <Setter Property="Foreground" Value="#e8b15a"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
                 <Button Content="Settings" Style="{StaticResource TextButton}" Margin="0,0,16,0" Click="Settings_Click"/>
@@ -240,6 +255,10 @@
                     </Style>
                 </TextBlock.Style>
             </TextBlock>
+            <TextBlock Text="{Binding RadminHint}" FontSize="13" Foreground="#e8b15a" TextWrapping="Wrap" Margin="0,8,0,0"
+                       Visibility="{Binding ShowRadmin, Converter={StaticResource BoolVis}}"/>
+            <Button Content="Open Radmin" Style="{StaticResource TextButton}" HorizontalAlignment="Left" Margin="0,6,0,0"
+                    Click="Radmin_Click" Visibility="{Binding ShowRadmin, Converter={StaticResource BoolVis}}"/>
             <Button Content="Open driver page" Style="{StaticResource TextButton}" HorizontalAlignment="Left" Margin="0,8,0,0"
                     Click="Driver_Click" Visibility="{Binding ShowDriver, Converter={StaticResource BoolVis}}"/>
             <TextBlock Text="{Binding LastLine}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0" Foreground="#e8b15a"

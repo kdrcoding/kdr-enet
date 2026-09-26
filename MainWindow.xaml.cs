@@ -18,6 +18,7 @@ public partial class MainWindow : Window
     private ScanResult? _lastScan;
     private string? _heldVehicleIp;
     private int _quietScans;
+    private int _pingTick;
     private bool _sideChosen;
     private bool _shutdown;
     private bool _closeWarned;
@@ -30,7 +31,12 @@ public partial class MainWindow : Window
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         _vm.VersionText = version is null ? "1.0" : version.Major + "." + version.Minor;
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(4) };
-        _timer.Tick += async (_, _) => await ScanAsync(probe: _lastScan?.CableState == "ok");
+        _timer.Tick += async (_, _) =>
+        {
+            await ScanAsync(probe: _lastScan?.CableState == "ok");
+            if (++_pingTick % 3 == 0)
+                QueuePing();
+        };
         Loaded += OnLoaded;
         Closing += OnClosing;
         _vm.PropertyChanged += (_, args) =>
@@ -77,6 +83,7 @@ public partial class MainWindow : Window
         }
 
         await ScanAsync(probe: true);
+        QueuePing();
         _timer.Start();
     }
 
@@ -431,6 +438,41 @@ public partial class MainWindow : Window
     private void Site_Click(object sender, RoutedEventArgs e)
     {
         Process.Start(new ProcessStartInfo("https://kdrcoding.com") { UseShellExecute = true });
+    }
+
+    private void QueuePing()
+    {
+        if (!RelaySettings.TryGet(out var host, out var port))
+        {
+            _vm.SetPing(null);
+            return;
+        }
+
+        _ = Task.Run(() =>
+        {
+            var milliseconds = SessionLink.MeasureMilliseconds(host, port);
+            Dispatcher.Invoke(() => _vm.SetPing(milliseconds));
+        });
+    }
+
+    private void Radmin_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (RadminLaunch.ExePath() is null)
+            {
+                Process.Start(new ProcessStartInfo("https://www.radmin-vpn.com/") { UseShellExecute = true });
+                _vm.AddLog("Radmin is not on this laptop. The download page is open. Install it on both laptops.");
+                return;
+            }
+
+            RadminLaunch.Open();
+            _vm.AddLog("Radmin is open. Join the same network on both laptops.");
+        }
+        catch (Exception ex)
+        {
+            _vm.AddLog(ex.Message, alert: true);
+        }
     }
 
     private async Task ScanAsync(bool probe = false)
