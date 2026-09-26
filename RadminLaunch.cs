@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 
 namespace KdrEnet;
 
@@ -19,18 +18,6 @@ internal static class RadminLaunch
 
         var other = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Radmin VPN", "RvRvpnGui.exe");
         return File.Exists(other) ? other : null;
-    }
-
-    public static bool IsRunning()
-    {
-        try
-        {
-            return Process.GetProcessesByName("RvRvpnGui").Length > 0;
-        }
-        catch
-        {
-            return false;
-        }
     }
 
     public static string? VpnIp()
@@ -63,45 +50,10 @@ internal static class RadminLaunch
         var path = ExePath() ?? throw new InvalidOperationException(
             "Radmin VPN is not in " + InstallFolder + ".");
 
-        if (ShowRunningWindow())
-            return;
-
         Process.Start(new ProcessStartInfo(path)
         {
             UseShellExecute = true,
             WorkingDirectory = Path.GetDirectoryName(path)
         });
     }
-
-    private static bool ShowRunningWindow()
-    {
-        foreach (var process in Process.GetProcessesByName("RvRvpnGui"))
-        {
-            try
-            {
-                process.Refresh();
-                var handle = process.MainWindowHandle;
-                if (handle == IntPtr.Zero)
-                    continue;
-                ShowWindow(handle, IsIconic(handle) ? 9 : 5);
-                SetForegroundWindow(handle);
-                return true;
-            }
-            catch
-            {
-                // Try the next window.
-            }
-        }
-
-        return false;
-    }
-
-    [DllImport("user32.dll")]
-    private static extern bool SetForegroundWindow(IntPtr handle);
-
-    [DllImport("user32.dll")]
-    private static extern bool ShowWindow(IntPtr handle, int command);
-
-    [DllImport("user32.dll")]
-    private static extern bool IsIconic(IntPtr handle);
 }

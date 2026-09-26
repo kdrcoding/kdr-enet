@@ -550,10 +550,17 @@ public partial class MainWindow : Window
                     if (_shutdown)
                         return;
                     _vm.NotePing(milliseconds);
-                    if (_vm.PingIsFar && !_pathLocked && !_vm.SessionOn)
+                    if (!_pathLocked && !_vm.SessionOn)
                     {
-                        _vm.UseRadmin = true;
-                        RefreshRadminAddress();
+                        if (_vm.PingIsFar && !_vm.UseRadmin)
+                        {
+                            _vm.UseRadmin = true;
+                            RefreshRadminAddress();
+                        }
+                        else if (_vm.PingTone == "good" && _vm.UseRadmin)
+                        {
+                            _vm.UseRadmin = false;
+                        }
                     }
                     PaintPaths();
                     SetNextStep(_lastScan);
