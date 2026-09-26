@@ -261,6 +261,23 @@ public sealed class SessionViewModel : INotifyPropertyChanged
     public bool ShowVin => IsCarSide && VinLine.Length > 0;
     public bool ShowCarFacts => IsCarSide && CarFactsLine.Length > 0;
 
+    private string _versionLine = "";
+
+    public string VersionLine
+    {
+        get => _versionLine;
+        set
+        {
+            if (!Set(ref _versionLine, value))
+                return;
+            OnPropertyChanged(nameof(ShowVersion));
+        }
+    }
+
+    public bool ShowVersion => IsCarSide && VersionLine.Length > 0;
+
+    public string PeerFrom { get; set; } = "";
+
     private string _linkState = "Not connected";
     private string _linkTone = "missing";
     private string _linkHint = "";
@@ -303,6 +320,21 @@ public sealed class SessionViewModel : INotifyPropertyChanged
 
     public bool ShowLinkAddress => LinkAddress.Length > 0;
 
+    private string _linkDetail = "";
+
+    public string LinkDetail
+    {
+        get => _linkDetail;
+        set
+        {
+            if (!Set(ref _linkDetail, value))
+                return;
+            OnPropertyChanged(nameof(ShowLinkDetail));
+        }
+    }
+
+    public bool ShowLinkDetail => IsCarSide && LinkDetail.Length > 0;
+
     public string LastLine
     {
         get => _lastLine;
@@ -322,7 +354,7 @@ public sealed class SessionViewModel : INotifyPropertyChanged
     }
 
     public bool CanCopy => UseRadmin
-        ? IsCarSide && SessionOn && !string.IsNullOrEmpty(RadminAddress)
+        ? IsCarSide && !IsBusy && !string.IsNullOrEmpty(RadminAddress)
         : IsCarSide ? SessionOn && SessionLink.Digits(SessionCode).Length == 6 : true;
 
     public bool IsBusy
@@ -408,9 +440,9 @@ public sealed class SessionViewModel : INotifyPropertyChanged
 
     public string CopyLabel => UseRadmin || !IsCarSide ? "Copy address" : "Copy code";
 
-    public bool ShowCopy => UseRadmin
-        ? IsCarSide && SessionOn && !string.IsNullOrEmpty(RadminAddress)
-        : !IsCarSide || SessionLink.Digits(SessionCode).Length == 6;
+    public bool ShowRadminCopy => UseRadmin && IsCarSide && !string.IsNullOrEmpty(RadminAddress);
+
+    public bool ShowCopy => !UseRadmin && (!IsCarSide || SessionLink.Digits(SessionCode).Length == 6);
 
     public bool CanStart => !IsBusy && !SessionOn && IsCarSide && !string.IsNullOrEmpty(VehicleIp);
 
@@ -477,6 +509,8 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(ShowTechRadmin));
         OnPropertyChanged(nameof(ShowVin));
         OnPropertyChanged(nameof(ShowCarFacts));
+        OnPropertyChanged(nameof(ShowVersion));
+        OnPropertyChanged(nameof(ShowRadminCopy));
         OnPropertyChanged(nameof(RadminReadout));
         OnPropertyChanged(nameof(SideSwitchLabel));
         OnPropertyChanged(nameof(GuideLine));

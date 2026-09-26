@@ -48,6 +48,14 @@ public partial class MainWindow : Window
             _vm.PeerLive = true;
             SetNextStep(_lastScan);
         }));
+        _session.OnClient = ip => Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (_shutdown || string.IsNullOrWhiteSpace(ip))
+                return;
+            _vm.PeerFrom = ip;
+            _vm.PeerLive = true;
+            SetNextStep(_lastScan);
+        }));
         _vm.PropertyChanged += (_, args) =>
         {
             if (args.PropertyName is nameof(SessionViewModel.IsCarSide) or nameof(SessionViewModel.CanSwitch))
@@ -142,6 +150,7 @@ public partial class MainWindow : Window
 
         _timer.Stop();
         _vm.PeerLive = false;
+        _vm.PeerFrom = "";
         _vm.IsBusy = true;
         try
         {
@@ -187,6 +196,7 @@ public partial class MainWindow : Window
 
         _timer.Stop();
         _vm.PeerLive = false;
+        _vm.PeerFrom = "";
         _vm.IsBusy = true;
         try
         {
@@ -253,6 +263,7 @@ public partial class MainWindow : Window
             _vm.Session.State = "wait";
             _vm.SessionCode = "—";
             _vm.PeerLive = false;
+            _vm.PeerFrom = "";
             _vm.AddLog("Session off.");
         }
         catch (Exception ex)
@@ -404,6 +415,7 @@ public partial class MainWindow : Window
 
         _timer.Stop();
         _vm.PeerLive = false;
+        _vm.PeerFrom = "";
         _vm.IsBusy = true;
         try
         {
@@ -812,8 +824,13 @@ public partial class MainWindow : Window
 
         if (result.Vin.Length == 17)
         {
+            if (result.Version.Length > 0)
+                _vm.VersionLine = "Version " + result.Version;
             if (result.Vin == _shownVin && _shownForIp == _vm.VehicleIp)
+            {
+                SetNextStep(result);
                 return;
+            }
             _shownVin = result.Vin;
             _shownForIp = _vm.VehicleIp;
             var facts = VehicleReader.Describe(result.Vin);
@@ -839,13 +856,14 @@ public partial class MainWindow : Window
 
     private void ClearVin()
     {
-        if (_shownVin.Length == 0 && _vm.VinLine.Length == 0 && _vm.CarFactsLine.Length == 0)
+        if (_shownVin.Length == 0 && _vm.VinLine.Length == 0 && _vm.CarFactsLine.Length == 0 && _vm.VersionLine.Length == 0)
             return;
         _shownVin = "";
         _shownForIp = "";
         _factsGen++;
         _vm.VinLine = "";
         _vm.CarFactsLine = "";
+        _vm.VersionLine = "";
     }
 
     private async Task FillModelAsync(string vin, int? year, int gen)
@@ -856,7 +874,10 @@ public partial class MainWindow : Window
             if (gen != _factsGen || _shownVin != vin)
                 return;
             if (!string.IsNullOrEmpty(line))
+            {
                 _vm.CarFactsLine = line;
+                SetNextStep(_lastScan);
+            }
         }
         catch
         {
@@ -891,13 +912,15 @@ public partial class MainWindow : Window
                 _vm.LinkTone = "wrong";
                 _vm.LinkHint = "";
                 _vm.LinkAddress = "";
+                _vm.LinkDetail = CarBlock();
                 return;
             }
 
-            _vm.LinkState = "Connected";
-            _vm.LinkTone = "good";
+            _vm.LinkState = string.IsNullOrEmpty(_vm.PeerFrom) ? "Not connected" : "Connected from " + _vm.PeerFrom;
+            _vm.LinkTone = string.IsNullOrEmpty(_vm.PeerFrom) ? "wrong" : "good";
             _vm.LinkHint = "Put this in E-Sys on the other laptop";
             _vm.LinkAddress = "tcp://" + _vm.RadminAddress + ":6801";
+            _vm.LinkDetail = CarBlock();
             return;
         }
 
@@ -907,15 +930,31 @@ public partial class MainWindow : Window
             _vm.LinkTone = "good";
             _vm.LinkHint = "Put this in E-Sys";
             _vm.LinkAddress = "tcp://127.0.0.1:6801";
+            _vm.LinkDetail = "";
             return;
         }
 
         if (_vm.SessionOn && !_vm.UseRadmin && _vm.IsCarSide)
         {
-            _vm.LinkState = _vm.PeerLive ? "Connected" : "Not connected";
-            _vm.LinkTone = _vm.PeerLive ? "good" : "wrong";
+            if (_vm.PeerLive && !string.IsNullOrEmpty(_vm.PeerFrom))
+            {
+                _vm.LinkState = "Connected from " + _vm.PeerFrom;
+                _vm.LinkTone = "good";
+            }
+            else if (_vm.PeerLive)
+            {
+                _vm.LinkState = "Connected. Someone joined this code.";
+                _vm.LinkTone = "good";
+            }
+            else
+            {
+                _vm.LinkState = "Not connected";
+                _vm.LinkTone = "wrong";
+            }
+
             _vm.LinkHint = "Put this in E-Sys on the other laptop";
             _vm.LinkAddress = "tcp://127.0.0.1:6801";
+            _vm.LinkDetail = CarBlock();
             return;
         }
 
@@ -923,6 +962,19 @@ public partial class MainWindow : Window
         _vm.LinkTone = "wrong";
         _vm.LinkHint = "";
         _vm.LinkAddress = "";
+        _vm.LinkDetail = _vm.IsCarSide ? CarBlock() : "";
+    }
+
+    private string CarBlock()
+    {
+        var parts = new List<string>();
+        if (_vm.CarFactsLine.Length > 0)
+            parts.Add(_vm.CarFactsLine);
+        if (_vm.VinLine.StartsWith("VIN ", StringComparison.Ordinal))
+            parts.Add(_vm.VinLine);
+        if (_vm.VersionLine.Length > 0)
+            parts.Add(_vm.VersionLine);
+        return string.Join("\n", parts);
     }
 
     private void Mark(string tone, string sentence)
@@ -949,7 +1001,9 @@ public partial class MainWindow : Window
                 Mark("good", _vm.IsCarSide
                     ? (string.IsNullOrEmpty(_vm.RadminAddress)
                         ? "Not connected. Join the same network in Radmin VPN."
-                        : "Connected. Put tcp://" + _vm.RadminAddress + ":6801 in E-Sys on the other laptop.")
+                        : (string.IsNullOrEmpty(_vm.PeerFrom)
+                            ? "Not connected. Copy the address. Nobody has reached this laptop yet."
+                            : "Connected from " + _vm.PeerFrom + "."))
                     : "Not connected. Paste the car laptop address into E-Sys.");
                 return;
             }
@@ -962,8 +1016,10 @@ public partial class MainWindow : Window
 
             Mark("good", _vm.IsCarSide
                 ? (_vm.PeerLive
-                    ? "Connected. The other laptop puts tcp://127.0.0.1:6801 in E-Sys."
-                    : "Not connected. Read the code. The other laptop is not on it yet.")
+                    ? (string.IsNullOrEmpty(_vm.PeerFrom)
+                        ? "Connected. Someone joined this code."
+                        : "Connected from " + _vm.PeerFrom + ".")
+                    : "Not connected. Read the code. Nobody has joined yet.")
                 : "Connected. Put tcp://127.0.0.1:6801 in E-Sys.");
             return;
         }

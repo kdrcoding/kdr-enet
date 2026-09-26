@@ -25,7 +25,11 @@ public sealed class SessionService
     private SessionLink? _link;
     private string? _vinForIp;
     private string _vin = "";
+    private string _version = "";
+    private string _versionVin = "";
+    private byte _gateway = 0x10;
     public Action? OnLive { get; set; }
+    public Action<string>? OnClient { get; set; }
 
     private static readonly string[] VpnHints =
     {
@@ -55,6 +59,8 @@ public sealed class SessionService
         {
             _vin = "";
             _vinForIp = null;
+            _version = "";
+            _versionVin = "";
             return ScanKdcan(title, word, best, others);
         }
 
@@ -63,6 +69,8 @@ public sealed class SessionService
         {
             _vin = "";
             _vinForIp = null;
+            _version = "";
+            _versionVin = "";
             var driver = DriverCheck.Find(AppSettings.Cable);
             return new ScanResult
             {
@@ -119,6 +127,7 @@ public sealed class SessionService
                         vin = hit.Vin;
                         _vin = hit.Vin;
                         _vinForIp = arpIp ?? hit.Ip;
+                        _gateway = hit.Gateway == 0 ? (byte)0x10 : hit.Gateway;
                     }
                 }
             }
@@ -138,11 +147,18 @@ public sealed class SessionService
         {
             _vin = "";
             _vinForIp = null;
+            _version = "";
+            _versionVin = "";
             vin = "";
         }
         else if (vin.Length == 17)
         {
             source = "The " + word + " answered on the cable.";
+            if (probeVehicle && _versionVin != vin && !string.IsNullOrEmpty(vehicleIp))
+            {
+                _versionVin = vin;
+                _version = VehicleReader.ReadSoftwareVersion(vehicleIp, _gateway) ?? "";
+            }
         }
 
         var awake = vehicleIp is not null;
@@ -172,7 +188,8 @@ public sealed class SessionService
             OtherTechnicians = others,
             Notes = notes,
             Vin = vin,
-            VinAttempted = vinAttempted
+            VinAttempted = vinAttempted,
+            Version = vin.Length == 17 ? _version : ""
         };
     }
 
@@ -255,6 +272,11 @@ public sealed class SessionService
         try
         {
             relay = new FastRelay();
+            relay.OnClient = ip =>
+            {
+                try { OnClient?.Invoke(ip); }
+                catch { /* the window updates on its own */ }
+            };
             relay.Start(IPAddress.Parse(vehicleIp));
             _relay = relay;
             relay = null;
@@ -704,6 +726,7 @@ public sealed class ScanResult
     public string DriverUrl { get; init; } = "";
     public string Vin { get; init; } = "";
     public bool VinAttempted { get; init; }
+    public string Version { get; init; } = "";
 }
 
 public sealed record TechnicianAddress(string Ip, string Name, int Rank);

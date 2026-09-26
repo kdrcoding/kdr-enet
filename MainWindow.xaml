@@ -255,6 +255,8 @@
                        Visibility="{Binding ShowVin, Converter={StaticResource BoolVis}}"/>
             <TextBlock Text="{Binding CarFactsLine}" FontSize="14" Foreground="#d5deea" TextWrapping="Wrap" Margin="0,2,0,0"
                        Visibility="{Binding ShowCarFacts, Converter={StaticResource BoolVis}}"/>
+            <TextBlock Text="{Binding VersionLine}" FontSize="14" Foreground="#d5deea" TextWrapping="Wrap" Margin="0,2,0,0"
+                       Visibility="{Binding ShowVersion, Converter={StaticResource BoolVis}}"/>
         </StackPanel>
 
         <StackPanel Grid.Row="5" VerticalAlignment="Center">
@@ -304,6 +306,8 @@
                         </Style>
                     </TextBlock.Style>
                 </TextBlock>
+                <TextBlock Text="{Binding LinkDetail}" FontSize="14" Foreground="#d5deea" TextWrapping="Wrap" Margin="0,6,0,0"
+                           Visibility="{Binding ShowLinkDetail, Converter={StaticResource BoolVis}}"/>
                 <TextBlock Text="{Binding LinkHint}" FontSize="13" Foreground="#8ea0b5" Margin="0,6,0,0"
                            Visibility="{Binding ShowLinkAddress, Converter={StaticResource BoolVis}}"/>
                 <TextBlock Text="{Binding LinkAddress}" FontSize="20" FontWeight="SemiBold" Margin="0,2,0,0"
@@ -314,6 +318,8 @@
         <StackPanel Grid.Row="6" Orientation="Horizontal" Margin="0,8,0,14">
             <Button Content="{Binding StartLabel}" Style="{StaticResource PrimaryButton}" MinWidth="108" Margin="0,0,8,0" Click="Start_Click" IsEnabled="{Binding CanStart}"
                     Visibility="{Binding IsCarSide, Converter={StaticResource BoolVis}}"/>
+            <Button Content="Copy" Style="{StaticResource GhostButton}" MinWidth="72" Margin="0,0,8,0" Click="Copy_Click" IsEnabled="{Binding CanCopy}"
+                    Visibility="{Binding ShowRadminCopy, Converter={StaticResource BoolVis}}"/>
             <Button Content="{Binding NewCodeLabel}" Style="{StaticResource GhostButton}" MinWidth="108" Margin="0,0,8,0" Click="NewCode_Click" IsEnabled="{Binding CanNewCode}"
                     Visibility="{Binding ShowCarCode, Converter={StaticResource BoolVis}}"/>
             <Button Content="{Binding JoinLabel}" Style="{StaticResource PrimaryButton}" MinWidth="108" Margin="0,0,8,0" Click="Join_Click" IsEnabled="{Binding CanJoin}"
