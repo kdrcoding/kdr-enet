@@ -1,3 +1,4 @@
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -11,7 +12,7 @@ namespace KdrEnet.Services;
 /// </summary>
 public static class VehicleReader
 {
-    public readonly record struct Found(string? Ip, string Vin);
+    public readonly record struct Found(string? Ip, string Vin, byte Gateway = 0x10);
     public readonly record struct Facts(int? Year, string Make);
 
     public static Found? Read(string localIp, string? vehicleIp, TimeSpan budget)
@@ -65,6 +66,128 @@ public static class VehicleReader
         return IsVin(vin) ? vin : null;
     }
 
+    public static byte ParseGateway(byte[] buffer, int length)
+    {
+        if (length < 8)
+            return 0x10;
+        var payloadLength = ReadBe32(buffer, 0);
+        if (payloadLength <= 0 || 6 + payloadLength > length)
+            return 0x10;
+        var text = Encoding.ASCII.GetString(buffer, 6, payloadLength);
+        var at = text.IndexOf("DIAGADR", StringComparison.OrdinalIgnoreCase);
+        if (at < 0 || at + 7 >= text.Length)
+            return 0x10;
+        var hex = "";
+        for (var i = at + 7; i < text.Length && hex.Length < 2; i++)
+        {
+            if (!Uri.IsHexDigit(text[i]))
+                break;
+            hex += text[i];
+        }
+
+        return byte.TryParse(hex, System.Globalization.NumberStyles.HexNumber, null, out var gateway) && gateway != 0
+            ? gateway
+            : (byte)0x10;
+    }
+
+    public static string? VersionFromPayload(byte[] payload)
+    {
+        if (payload.Length < 6 || payload[2] != 0x62 || payload[3] != 0xF1)
+            return null;
+        var text = Encoding.ASCII.GetString(payload, 5, payload.Length - 5).Trim('\0', ' ', '\r', '\n');
+        if (text.Length < 2)
+            return null;
+        foreach (var character in text)
+        {
+            if (character < 32 || character > 126)
+                return null;
+        }
+
+        return text;
+    }
+
+    public static string? ReadSoftwareVersion(string vehicleIp, byte target)
+    {
+        Socket? socket = null;
+        try
+        {
+            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            socket.NoDelay = true;
+            var connect = socket.BeginConnect(vehicleIp, 6801, null, null);
+            if (!connect.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(2)) || !socket.Connected)
+            {
+                try { socket.Close(); } catch { /* give up */ }
+                return null;
+            }
+
+            socket.EndConnect(connect);
+            socket.ReceiveTimeout = 1200;
+            socket.SendTimeout = 1200;
+            foreach (var did in new byte[] { 0x95, 0x94 })
+            {
+                var text = AskVersion(socket, target, did);
+                if (!string.IsNullOrEmpty(text))
+                    return text;
+            }
+
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
+        finally
+        {
+            try { socket?.Close(); } catch { /* already closed */ }
+        }
+    }
+
+    private static string? AskVersion(Socket socket, byte target, byte did)
+    {
+        var frame = new byte[] { 0x00, 0x00, 0x00, 0x05, 0x00, 0x01, 0xF4, target, 0x22, 0xF1, did };
+        socket.Send(frame);
+        for (var frameIndex = 0; frameIndex < 4; frameIndex++)
+        {
+            byte[] header;
+            try
+            {
+                header = ReadExact(socket, 6);
+            }
+            catch
+            {
+                return null;
+            }
+
+            var length = ReadBe32(header, 0);
+            var type = ReadBe16(header, 4);
+            if (length < 0 || length > 512)
+                return null;
+            var payload = length == 0 ? Array.Empty<byte>() : ReadExact(socket, length);
+            if (type != 0x0001)
+                continue;
+            var text = VersionFromPayload(payload);
+            if (!string.IsNullOrEmpty(text))
+                return text;
+        }
+
+        return null;
+    }
+
+    private static byte[] ReadExact(Socket socket, int count)
+    {
+        var buffer = new byte[count];
+        var got = 0;
+        while (got < count)
+        {
+            var read = socket.Receive(buffer, got, count - got, SocketFlags.None);
+            if (read <= 0)
+                throw new IOException("The car closed the version read.");
+            got += read;
+        }
+
+        return buffer;
+    }
+
     public static Facts Describe(string vin)
     {
         if (!IsVin(vin))
@@ -98,6 +221,11 @@ public static class VehicleReader
             throw new InvalidOperationException("A VIN with a bad check digit was accepted.");
         if (!PassesCheckDigit("1HGCM82633A004352"))
             throw new InvalidOperationException("A known VIN check digit was rejected.");
+        if (ParseGateway(hsfz, hsfz.Length) != 0x10)
+            throw new InvalidOperationException("The gateway address did not parse.");
+        var version = VersionFromPayload(new byte[] { 0x10, 0xF4, 0x62, 0xF1, 0x95, (byte)'S', (byte)'1', (byte)'5', (byte)'A', (byte)'-', (byte)'2', (byte)'1' });
+        if (version != "S15A-21")
+            throw new InvalidOperationException("The software version did not parse.");
     }
 
     private static Found? ReadHsfz(string localIp, string? vehicleIp, TimeSpan timeout)
@@ -112,7 +240,17 @@ public static class VehicleReader
             Send(socket, probe, "169.254.255.255", 6811);
             if (!string.IsNullOrEmpty(vehicleIp))
                 Send(socket, probe, vehicleIp, 6811);
-            return Receive(socket, localIp, timeout, ParseHsfz);
+            byte gateway = 0x10;
+            var found = Receive(socket, localIp, timeout, (buffer, length) =>
+            {
+                var vin = ParseHsfz(buffer, length);
+                if (vin is not null)
+                    gateway = ParseGateway(buffer, length);
+                return vin;
+            });
+            if (found is Found hit && hit.Vin.Length == 17)
+                return new Found(hit.Ip, hit.Vin, gateway);
+            return found;
         }
         catch (SocketException)
         {

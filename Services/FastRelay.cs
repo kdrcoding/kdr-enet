@@ -20,6 +20,7 @@ public sealed class FastRelay : IDisposable
     private readonly object _gate = new();
     private readonly CancellationTokenSource _cancel = new();
     private int _disposed;
+    public Action<string>? OnClient { get; set; }
 
     public void Start(IPAddress vehicle, IReadOnlyList<int>? tcpPorts = null, IReadOnlyList<int>? udpPorts = null)
     {
@@ -77,7 +78,7 @@ public sealed class FastRelay : IDisposable
 
         _listeners.Add(listen);
         var token = _cancel.Token;
-        _loops.Add(Task.Run(() => AcceptLoop(listen, vehicle, targetPort, token)));
+        _loops.Add(Task.Run(() => AcceptLoop(listen, vehicle, listenPort, targetPort, token)));
     }
 
     private void ListenUdp(IPAddress vehicle, int port)
@@ -99,7 +100,7 @@ public sealed class FastRelay : IDisposable
         _loops.Add(Task.Run(() => UdpLoop(listen, vehicle, port, token)));
     }
 
-    private async Task AcceptLoop(Socket listen, IPAddress vehicle, int targetPort, CancellationToken token)
+    private async Task AcceptLoop(Socket listen, IPAddress vehicle, int listenPort, int targetPort, CancellationToken token)
     {
         while (!token.IsCancellationRequested)
         {
@@ -114,6 +115,12 @@ public sealed class FastRelay : IDisposable
             }
 
             Tune(incoming);
+            if (listenPort == 6801 && incoming.RemoteEndPoint is IPEndPoint remote && remote.Address.ToString() is { Length: > 0 } ip && ip != "127.0.0.1")
+            {
+                try { OnClient?.Invoke(ip); }
+                catch { /* the bridge keeps running */ }
+            }
+
             _ = Task.Run(() => PumpAsync(incoming, vehicle, targetPort));
         }
     }
