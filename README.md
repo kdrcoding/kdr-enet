@@ -38,8 +38,9 @@ Use this when the number at the top is low, such as 50 ms.
 **E-Sys laptop**
 
 1. Click **E-Sys laptop**.
-2. Type the 6 numbers. Click **Join**.
-3. In E-Sys use `tcp://127.0.0.1:6801`. Leave this window open.
+2. Type the 6 numbers. Click **Check code**.
+3. **Found** means that car laptop is waiting. Click **Join**. **Not found** means no car laptop is waiting on those numbers.
+4. In E-Sys use `tcp://127.0.0.1:6801`. Leave this window open.
 
 <p align="center">
   <img src="docs/car.png" width="360" alt="Car laptop. Get code, then read the 6 numbers.">

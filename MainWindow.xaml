@@ -293,6 +293,8 @@
                     Visibility="{Binding IsCarSide, Converter={StaticResource BoolVis}}"/>
             <Button Content="{Binding JoinLabel}" Style="{StaticResource PrimaryButton}" MinWidth="108" Margin="0,0,8,0" Click="Join_Click" IsEnabled="{Binding CanJoin}"
                     Visibility="{Binding ShowTechCode, Converter={StaticResource BoolVis}}"/>
+            <Button Content="{Binding CheckLabel}" Style="{StaticResource GhostButton}" MinWidth="120" Margin="0,0,8,0" Click="Check_Click" IsEnabled="{Binding CanCheck}"
+                    Visibility="{Binding ShowTechCode, Converter={StaticResource BoolVis}}"/>
             <Button Content="{Binding CopyLabel}" Style="{StaticResource GhostButton}" MinWidth="108" Margin="0,0,8,0" Click="Copy_Click" IsEnabled="{Binding CanCopy}"
                     Visibility="{Binding ShowCopy, Converter={StaticResource BoolVis}}"/>
             <Button Content="Stop" Style="{StaticResource GhostButton}" MinWidth="72" Click="Stop_Click"

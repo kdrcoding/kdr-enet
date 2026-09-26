@@ -84,8 +84,11 @@ public sealed class SessionViewModel : INotifyPropertyChanged
             var digits = SessionLink.Digits(value);
             if (digits.Length > 6)
                 digits = digits[..6];
-            if (!Set(ref _codeInput, digits))
+            if (digits == _codeInput)
                 return;
+            _identifyText = "";
+            _identifyTone = "missing";
+            Set(ref _codeInput, digits);
             NotifyCommands();
         }
     }
@@ -289,6 +292,25 @@ public sealed class SessionViewModel : INotifyPropertyChanged
 
     public string JoinLabel => IsBusy ? "Working…" : "Join";
 
+    public string CheckLabel => IsBusy ? "Identifying…" : "Check code";
+
+    private string _identifyText = "";
+    private string _identifyTone = "missing";
+
+    public string IdentifyText
+    {
+        get => _identifyText;
+        set => Set(ref _identifyText, value);
+    }
+
+    public string IdentifyTone
+    {
+        get => _identifyTone;
+        set => Set(ref _identifyTone, value);
+    }
+
+    public bool CanCheck => !UseRadmin && !IsBusy && !SessionOn && IsTechSide && RelayReady && SessionLink.Digits(CodeInput).Length == 6;
+
     public string DisplayCode => SessionLink.Digits(SessionCode).Length == 6 ? SessionLink.FormatCode(SessionCode) : "—";
 
     public bool CodeReady => SessionLink.Digits(SessionCode).Length == 6;
@@ -354,6 +376,7 @@ public sealed class SessionViewModel : INotifyPropertyChanged
     {
         OnPropertyChanged(nameof(StartLabel));
         OnPropertyChanged(nameof(JoinLabel));
+        OnPropertyChanged(nameof(CheckLabel));
         OnPropertyChanged(nameof(DisplayCode));
         OnPropertyChanged(nameof(CodeReady));
         OnPropertyChanged(nameof(Shown0));
@@ -367,6 +390,7 @@ public sealed class SessionViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(ShowCopy));
         OnPropertyChanged(nameof(CanStart));
         OnPropertyChanged(nameof(CanJoin));
+        OnPropertyChanged(nameof(CanCheck));
         OnPropertyChanged(nameof(CanStop));
         OnPropertyChanged(nameof(CanSwitch));
         OnPropertyChanged(nameof(CanCopy));
