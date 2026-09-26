@@ -1,74 +1,56 @@
 # KDR ENET
 
-Free Windows app for a remote BMW coding session. The laptop on the car shows a 6-digit code. The laptop running E-Sys types it. In E-Sys use `tcp://127.0.0.1:6801`. The two laptops do not need the same Wi-Fi.
-
-Windows 10 or 11, 64-bit. Click **Yes** when Windows asks. .NET is already inside the download.
-
-Cables for the session: **ENET**, **MHD**, **ICOM**. K+DCAN only shows that the USB cable is in. The check at the bottom says **Missing**, **Wrong**, or **All good**.
-
-Both copies call the KDR session server. The car laptop and the E-Sys laptop can be on different internet connections.
-
-Not affiliated with BMW. Created by Kadir · [kdrcoding.com](https://kdrcoding.com)
-
-**[Download KdrEnet.exe](https://github.com/kdrcoding/kdr-enet/releases/latest)** · Windows 10 or 11, 64-bit · click **Yes**
-
-You do not install .NET. It is already inside the download. The app itself does not need a driver to open.
+Free Windows app. One laptop stays with the car. The other laptop runs E-Sys. They do not need the same Wi-Fi.
 
 <p align="center">
-  <img src="docs/car.png" width="360" alt="KDR ENET on the car laptop. The BMW session code appears in the Code box.">
-  &nbsp;&nbsp;
-  <img src="docs/esys.png" width="360" alt="KDR ENET on the E-Sys laptop. Type the BMW session code, then use 127.0.0.1 in E-Sys.">
+  <a href="https://github.com/kdrcoding/kdr-enet/releases/latest/download/KdrEnet.exe">
+    <img src="docs/download-exe.png" width="520" alt="Download KdrEnet.exe">
+  </a>
 </p>
 
-## Car laptop · with the BMW
+<p align="center">
+  <b>Click the blue button. It downloads KdrEnet.exe.</b><br>
+  Windows 10 or 11, 64-bit. When Windows asks, click <b>Yes</b>. You do not install .NET.
+</p>
 
-1. Open KDR ENET → **Car laptop**
-2. Cable in. Ignition on. Wait until the module is awake
-3. **Get code** — read the six numbers out loud
-4. Leave this window open
+## What to click
 
-Cables for the session: **ENET**, **MHD**, **ICOM**.
+1. **How the two laptops connect.** Use **KDR server** when the number at the top is low. Use **Radmin VPN** when it says the server is far, or when you already share a Radmin VPN network. **Open Radmin VPN** starts that program. Both laptops join the same network.
+2. **Which laptop is this.** **Car laptop** is the one with the cable. **E-Sys laptop** is the other one.
+3. The sentence under those buttons tells you the next click.
 
-## E-Sys laptop
+On **KDR server**, the car laptop shows 6 numbers. The E-Sys laptop types them and clicks **Join**. In E-Sys use `tcp://127.0.0.1:6801`.
 
-1. Open KDR ENET → **E-Sys laptop**
-2. Type the code in the **6 boxes** → **Join**
-3. After Join, in E-Sys put `tcp://127.0.0.1:6801`
-
-The top of the window shows the delay to the session server, in milliseconds. **KDR server** uses the 6-digit code and `tcp://127.0.0.1:6801`. **Radmin VPN** uses a Radmin VPN network you already joined. On the car laptop, Start shows an address like `tcp://26.x.x.x:6801`.
-4. Leave this window open
+On **Radmin VPN**, the car laptop clicks **Start** and shows an address like `tcp://26.x.x.x:6801`. Paste that address into E-Sys.
 
 **Stop** on both laptops when the coding is done.
+
+<p align="center">
+  <img src="docs/car.png" width="360" alt="KDR ENET on the car laptop.">
+  &nbsp;&nbsp;
+  <img src="docs/esys.png" width="360" alt="KDR ENET on the E-Sys laptop.">
+</p>
 
 ## Settings
 
 <p align="center">
-  <img src="docs/settings.png" width="320" alt="Settings for BMW cable type and car or bike.">
+  <img src="docs/settings.png" width="320" alt="Settings for the cable and car or bike.">
 </p>
 
-Pick the cable and **Car** or **Bike**.
-
-K+DCAN only shows that the USB cable is plugged in. The code session is for ENET, MHD, and ICOM.
+Pick the cable and **Car** or **Bike**. The code session is for **ENET**, **MHD**, and **ICOM**. K+DCAN only shows that the USB cable is in.
 
 ## Cable driver
 
-Windows 10 and 11 usually already have the cable driver. If the cable is plugged in and the app still says the driver is missing, click **Open driver page** in the app.
+Windows 10 and 11 usually already have the cable driver. If the cable is plugged in and the app says the driver is missing, click **Open driver page**.
 
-- K+DCAN, FTDI chip: [FTDI VCP driver](https://ftdichip.com/drivers/vcp-drivers/)
-- K+DCAN, CH340 chip: [WCH CH340 driver](https://www.wch-ic.com/downloads/CH341SER_EXE.html)
-- ENET, ASIX chip: [ASIX driver](https://www.asix.com.tw/en/support/download)
-- ENET, Realtek chip: [Realtek downloads](https://www.realtek.com/en/downloads)
-
-The E-Sys laptop does not need a cable driver.
-
-The bottom line names what is missing, what is wrong, or says **All good**.
+The bottom line names what is missing. **Awake** means the module answered. It is not a battery voltage.
 
 ## Before you start
 
-- First open: read the terms → **I agree**
-- **Awake** means the module answered. It is not a battery voltage
-- **Get code** on the car laptop, then **Join** on the E-Sys laptop, then connect E-Sys
+The first time, read About and click **I agree**. You use KDR ENET at your own risk, and only on a vehicle you are allowed to work on. It does not include E-Sys or Radmin VPN. It is not made by BMW.
 
-KDR ENET is an independent tool for a remote BMW session. Not affiliated with BMW.
+<p align="center">
+  <img src="docs/about.png" width="320" alt="About KDR ENET. You use it at your own risk, and only on a vehicle you are allowed to work on.">
+</p>
 
 Created by Kadir · [kdrcoding.com](https://kdrcoding.com) · support@kdrcoding.com
