@@ -41,6 +41,13 @@ public partial class MainWindow : Window
         _pingTimer.Tick += (_, _) => QueuePing();
         Loaded += OnLoaded;
         Closing += OnClosing;
+        _session.OnLive = () => Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (_shutdown)
+                return;
+            _vm.PeerLive = true;
+            SetNextStep(_lastScan);
+        }));
         _vm.PropertyChanged += (_, args) =>
         {
             if (args.PropertyName is nameof(SessionViewModel.IsCarSide) or nameof(SessionViewModel.CanSwitch))
@@ -134,6 +141,7 @@ public partial class MainWindow : Window
             return;
 
         _timer.Stop();
+        _vm.PeerLive = false;
         _vm.IsBusy = true;
         try
         {
@@ -149,6 +157,7 @@ public partial class MainWindow : Window
                 _vm.AddLog(string.IsNullOrEmpty(_vm.RadminAddress)
                     ? "The car is open. Join the same network in Radmin VPN. The address shows here after that."
                     : "The car is open. On the other laptop, E-Sys uses tcp://" + _vm.RadminAddress + ":6801.");
+                SetNextStep(_lastScan);
                 return;
             }
 
@@ -177,6 +186,7 @@ public partial class MainWindow : Window
             return;
 
         _timer.Stop();
+        _vm.PeerLive = false;
         _vm.IsBusy = true;
         try
         {
@@ -214,6 +224,7 @@ public partial class MainWindow : Window
             _vm.SessionCode = SessionLink.FormatCode(code);
             _vm.SessionOn = true;
             _vm.AddLog("Code " + SessionLink.Digits(code) + " stays on this laptop. The other laptop cannot join until the session server is set.");
+            SetNextStep(_lastScan);
             return;
         }
 
@@ -227,6 +238,7 @@ public partial class MainWindow : Window
         _vm.AddLog(replacing
             ? "New code " + _vm.SessionCode + " is set. The old code is finished."
             : "Leave this window open. The other person types " + _vm.SessionCode + ".");
+        SetNextStep(_lastScan);
     }
 
     private async void Stop_Click(object sender, RoutedEventArgs e)
@@ -240,6 +252,7 @@ public partial class MainWindow : Window
             _vm.Session.Detail = "Off";
             _vm.Session.State = "wait";
             _vm.SessionCode = "—";
+            _vm.PeerLive = false;
             _vm.AddLog("Session off.");
         }
         catch (Exception ex)
@@ -390,6 +403,7 @@ public partial class MainWindow : Window
             return;
 
         _timer.Stop();
+        _vm.PeerLive = false;
         _vm.IsBusy = true;
         try
         {
@@ -417,6 +431,7 @@ public partial class MainWindow : Window
             _vm.Session.Detail = "Joined";
             _vm.Session.State = "ok";
             _vm.AddLog("In E-Sys use tcp://127.0.0.1:6801. Leave this window open.");
+            SetNextStep(_lastScan);
         }
         catch (Exception ex)
         {
@@ -866,6 +881,50 @@ public partial class MainWindow : Window
         Process.Start(new ProcessStartInfo(_vm.DriverUrl) { UseShellExecute = true });
     }
 
+    private void PaintLink()
+    {
+        if (_vm.SessionOn && _vm.UseRadmin && _vm.IsCarSide)
+        {
+            if (string.IsNullOrEmpty(_vm.RadminAddress))
+            {
+                _vm.LinkState = "Not connected";
+                _vm.LinkTone = "wrong";
+                _vm.LinkHint = "";
+                _vm.LinkAddress = "";
+                return;
+            }
+
+            _vm.LinkState = "Connected";
+            _vm.LinkTone = "good";
+            _vm.LinkHint = "Put this in E-Sys on the other laptop";
+            _vm.LinkAddress = "tcp://" + _vm.RadminAddress + ":6801";
+            return;
+        }
+
+        if (_vm.SessionOn && !_vm.UseRadmin && !_vm.IsCarSide)
+        {
+            _vm.LinkState = "Connected";
+            _vm.LinkTone = "good";
+            _vm.LinkHint = "Put this in E-Sys";
+            _vm.LinkAddress = "tcp://127.0.0.1:6801";
+            return;
+        }
+
+        if (_vm.SessionOn && !_vm.UseRadmin && _vm.IsCarSide)
+        {
+            _vm.LinkState = _vm.PeerLive ? "Connected" : "Not connected";
+            _vm.LinkTone = _vm.PeerLive ? "good" : "wrong";
+            _vm.LinkHint = "Put this in E-Sys on the other laptop";
+            _vm.LinkAddress = "tcp://127.0.0.1:6801";
+            return;
+        }
+
+        _vm.LinkState = "Not connected";
+        _vm.LinkTone = "wrong";
+        _vm.LinkHint = "";
+        _vm.LinkAddress = "";
+    }
+
     private void Mark(string tone, string sentence)
     {
         _vm.CheckTone = tone;
@@ -876,6 +935,7 @@ public partial class MainWindow : Window
     private void SetNextStep(ScanResult? result)
     {
         _vm.ShowDriver = false;
+        PaintLink();
         if (_vm.SessionOn && _vm.Session.State == "warn")
         {
             Mark("wrong", "Wrong: the firewall is still off from the last session. Click Stop.");
@@ -888,9 +948,9 @@ public partial class MainWindow : Window
             {
                 Mark("good", _vm.IsCarSide
                     ? (string.IsNullOrEmpty(_vm.RadminAddress)
-                        ? "The car is open. Join the same network in Radmin VPN."
-                        : "All good. On the other laptop, E-Sys uses tcp://" + _vm.RadminAddress + ":6801.")
-                    : "Join the same Radmin VPN network. Paste the car laptop address into E-Sys.");
+                        ? "Not connected. Join the same network in Radmin VPN."
+                        : "Connected. Put tcp://" + _vm.RadminAddress + ":6801 in E-Sys on the other laptop.")
+                    : "Not connected. Paste the car laptop address into E-Sys.");
                 return;
             }
 
@@ -901,8 +961,10 @@ public partial class MainWindow : Window
             }
 
             Mark("good", _vm.IsCarSide
-                ? "All good. This code stays. Read it to the other laptop. Leave this window open."
-                : "All good. In E-Sys use tcp://127.0.0.1:6801. Leave this window open.");
+                ? (_vm.PeerLive
+                    ? "Connected. The other laptop puts tcp://127.0.0.1:6801 in E-Sys."
+                    : "Not connected. Read the code. The other laptop is not on it yet.")
+                : "Connected. Put tcp://127.0.0.1:6801 in E-Sys.");
             return;
         }
 
@@ -926,10 +988,10 @@ public partial class MainWindow : Window
                 return;
             }
 
-            Mark(_vm.RelayReady ? "good" : "missing",
+            Mark(_vm.RelayReady ? "missing" : "missing",
                 _vm.RelayReady
-                    ? "All good. Click Join, then in E-Sys use tcp://127.0.0.1:6801."
-                    : "The session server is missing, so Join stays off. In E-Sys the line will be tcp://127.0.0.1:6801.");
+                    ? "Not connected. Click Join. The address for E-Sys shows here after that."
+                    : "Not connected. The session server is missing, so Join stays off.");
             return;
         }
 

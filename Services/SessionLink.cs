@@ -22,13 +22,25 @@ public sealed class SessionLink : IDisposable
     private readonly CancellationTokenSource _cancel = new();
     private int _disposed;
     public Action<string>? OnNote { get; set; }
+    public Action? OnLive { get; set; }
     private int _noted;
+    private int _live;
 
     private void NoteOnce(string message)
     {
         if (Interlocked.Exchange(ref _noted, 1) != 0)
             return;
         try { OnNote?.Invoke(message); }
+        catch { /* the session itself keeps running */ }
+    }
+
+    private void MarkLive(int port)
+    {
+        if (port != 6801)
+            return;
+        if (Interlocked.Exchange(ref _live, 1) != 0)
+            return;
+        try { OnLive?.Invoke(); }
         catch { /* the session itself keeps running */ }
     }
 
@@ -209,6 +221,7 @@ public sealed class SessionLink : IDisposable
                 var stream = relay.GetStream();
                 await WriteHelloAsync(stream, 'C', code, port, 'T', ct);
                 await ReadOkAsync(stream, ct, Timeout.InfiniteTimeSpan);
+                MarkLive(port);
                 var car = NewTcpSocket();
                 var held = relay;
                 relay = null;
@@ -274,6 +287,7 @@ public sealed class SessionLink : IDisposable
             var stream = relay.GetStream();
             await WriteHelloAsync(stream, 'T', code, port, 'T', ct);
             await ReadOkAsync(stream, ct, TimeSpan.FromSeconds(20));
+            MarkLive(port);
             await PumpSocketsAsync(local, relay.Client, ct);
         }
         catch (Exception ex)
