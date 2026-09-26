@@ -20,7 +20,10 @@ public sealed class FastRelay : IDisposable
     private readonly object _gate = new();
     private readonly CancellationTokenSource _cancel = new();
     private int _disposed;
+    private readonly object _peerGate = new();
+    private int _peers;
     public Action<string>? OnClient { get; set; }
+    public Action? OnQuiet { get; set; }
 
     public void Start(IPAddress vehicle, IReadOnlyList<int>? tcpPorts = null, IReadOnlyList<int>? udpPorts = null)
     {
@@ -115,29 +118,30 @@ public sealed class FastRelay : IDisposable
             }
 
             Tune(incoming);
-            if (listenPort == 6801 && incoming.RemoteEndPoint is IPEndPoint remote && remote.Address.ToString() is { Length: > 0 } ip && ip != "127.0.0.1")
-            {
-                try { OnClient?.Invoke(ip); }
-                catch { /* the bridge keeps running */ }
-            }
-
-            _ = Task.Run(() => PumpAsync(incoming, vehicle, targetPort));
+            _ = Task.Run(() => PumpAsync(incoming, vehicle, targetPort, listenPort));
         }
     }
 
-    private async Task PumpAsync(Socket incoming, IPAddress vehicle, int targetPort)
+    private async Task PumpAsync(Socket incoming, IPAddress vehicle, int targetPort, int listenPort)
     {
         using var remote = incoming;
         using var car = NewTcpSocket();
         Track(remote);
         Track(car);
+        var reported = false;
         try
         {
             using var connectCancel = new CancellationTokenSource(TimeSpan.FromSeconds(8));
             await car.ConnectAsync(new IPEndPoint(vehicle, targetPort), connectCancel.Token);
-            var toCar = PipeAsync(remote, car);
-            var toRemote = PipeAsync(car, remote);
-            await Task.WhenAll(toCar, toRemote);
+            var pump = Task.WhenAll(PipeAsync(remote, car), PipeAsync(car, remote));
+            if (listenPort == 6801)
+            {
+                var done = await Task.WhenAny(pump, Task.Delay(400, _cancel.Token));
+                if (done != pump && !_cancel.IsCancellationRequested)
+                    reported = ReportArrival(listenPort, remote);
+            }
+
+            await pump;
         }
         catch
         {
@@ -145,8 +149,38 @@ public sealed class FastRelay : IDisposable
         }
         finally
         {
+            if (reported)
+                ReportLeft();
             Forget(remote);
             Forget(car);
+        }
+    }
+
+    private bool ReportArrival(int listenPort, Socket remote)
+    {
+        if (listenPort != 6801 || remote.RemoteEndPoint is not IPEndPoint end || end.Address.ToString() is not { Length: > 0 } ip || ip == "127.0.0.1")
+            return false;
+        lock (_peerGate)
+        {
+            _peers++;
+            try { OnClient?.Invoke(ip); }
+            catch { /* the bridge keeps running */ }
+        }
+
+        return true;
+    }
+
+    private void ReportLeft()
+    {
+        lock (_peerGate)
+        {
+            _peers--;
+            if (_peers < 0)
+                _peers = 0;
+            if (_peers > 0)
+                return;
+            try { OnQuiet?.Invoke(); }
+            catch { /* the bridge keeps running */ }
         }
     }
 

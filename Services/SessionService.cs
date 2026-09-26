@@ -29,6 +29,7 @@ public sealed class SessionService
     private string _versionVin = "";
     private byte _gateway = 0x10;
     public Action? OnLive { get; set; }
+    public Action? OnQuiet { get; set; }
     public Action<string>? OnClient { get; set; }
 
     private static readonly string[] VpnHints =
@@ -277,6 +278,11 @@ public sealed class SessionService
                 try { OnClient?.Invoke(ip); }
                 catch { /* the window updates on its own */ }
             };
+            relay.OnQuiet = () =>
+            {
+                try { OnQuiet?.Invoke(); }
+                catch { /* the window updates on its own */ }
+            };
             relay.Start(IPAddress.Parse(vehicleIp));
             _relay = relay;
             relay = null;
@@ -322,6 +328,11 @@ public sealed class SessionService
             link.OnLive = () =>
             {
                 try { OnLive?.Invoke(); }
+                catch { /* the window updates on its own */ }
+            };
+            link.OnQuiet = () =>
+            {
+                try { OnQuiet?.Invoke(); }
                 catch { /* the window updates on its own */ }
             };
             try

@@ -32,7 +32,7 @@ Use this when the number at the top is low, such as 50 ms.
 **Car laptop**
 
 1. Cable in. Ignition on. The window shows the VIN. Year and make come from that VIN. The model is added when the VIN decodes cleanly. Wait until the bottom line says the car is awake.
-2. Click **Get code**. It stays until **Stop**. **New code** replaces it. The window stays **Not connected** until someone joins, then it says **Connected**. On this path their home address is not visible. The car year, type, and VIN show with that line when the cable read them.
+2. Click **Get code**. It stays until **Stop**. **New code** replaces it. The window stays **Not connected** until someone joins, then **Connected** turns green. If they leave, it goes back to **Not connected**. On this path their home address is not visible. The car year, type, and VIN sit with that line once the code is up.
 3. Read the 6 numbers to the other person. Leave this window open.
 
 **E-Sys laptop**
@@ -54,7 +54,7 @@ Use this when the top line says the server is far, or when both laptops already 
 
 1. On both laptops, click **Open Radmin VPN** and join the same network.
 2. On the car laptop, click **Radmin VPN**. **Copy** sits next to **Start** and copies the address, such as `tcp://26.x.x.x:6801`.
-3. Click **Start**. The window stays **Not connected** until the other laptop reaches this one. Then it says **Connected from** that laptop's Radmin address.
+3. Click **Start**. The window stays **Not connected** until the other laptop reaches this one. Then **Connected from** that laptop's Radmin address turns green. If they leave, it goes back to **Not connected**.
 4. On the E-Sys laptop, paste that address into E-Sys.
 
 **Open Radmin VPN** starts Radmin VPN. It does not start Radmin Viewer. Radmin VPN is a program you install yourself. This app does not include it.
